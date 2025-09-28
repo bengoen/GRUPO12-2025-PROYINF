@@ -1,1 +1,101 @@
-<h1>Hello world!</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/head') %>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <section class="hero-section">
+        <div class="container">
+            <h1>Obtén el Dinero que Necesitas,<br>Cuando lo Necesitas.</h1>
+            <p class="subtitle">Préstamos personales digitales: flexibilidad, accesibilidad, tasas bajas y aprobación rápida.</p>
+            <div class="cta-buttons">
+                <a href="#simulate" class="btn btn-primary btn-large">Simula Tu Préstamo</a>
+                <a href="#how-it-works" class="btn btn-secondary btn-large">Ver Cómo Funciona</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="value-props" class="value-props-section">
+        <div class="container">
+            <h2>Nuestra Propuesta de Valor</h2>
+            <div class="props-grid">
+                <div class="prop-item">
+                    <i class="fa-solid fa-arrows-turn-to-dots fa-3x mb-4"></i>
+                    <h3>Flexibilidad</h3>
+                    <p>Adapta el monto y el plazo de tu préstamo a tus necesidades.</p>
+                </div>
+                <div class="prop-item">
+                    <i class="fa-solid fa-check-to-slot fa-3x mb-4"></i>
+                    <h3>Accesibilidad</h3>
+                    <p>Solicita desde cualquier lugar, en cualquier momento, 100% online.</p>
+                </div>
+                <div class="prop-item">
+                    <i class="fa-solid fa-arrow-trend-down fa-3x mb-4"></i>
+                    <h3>Tasas Bajas</h3>
+                    <p>Disfruta de tasas de interés competitivas y transparentes.</p>
+                </div>
+                <div class="prop-item">
+                    <i class="fa-solid fa-gauge-high fa-3x mb-4"></i>
+                    <h3>Rapidez</h3>
+                    <p>Aprobación y desembolso ágil para que no esperes más.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="simulate" class="simulate-section">
+        <div class="container">
+            <h2>Simula Tu Préstamo Ideal</h2>
+            <p>Usa nuestra herramienta para calcular tu cuota y ver las opciones disponibles.</p>
+            <!-- Aquí iría tu componente React de simulación de préstamos -->
+            <div id="loan-simulator-root">
+                <p>Cargando simulador de préstamos...</p>
+                <a href="/simulate" class="btn btn-primary">Ir al Simulador Completo</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works-section">
+        <div class="container">
+            <h2>¿Cómo Funciona?</h2>
+            <div class="steps-grid">
+                <div class="step-item">
+                    <span class="step-number">1</span>
+                    <h3>Simula</h3>
+                    <p>Elige el monto y el plazo que mejor se adapten a ti.</p>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">2</span>
+                    <h3>Solicita</h3>
+                    <p>Completa nuestra aplicación en línea en pocos minutos.</p>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">3</span>
+                    <h3>Recibe</h3>
+                    <p>Obtén la aprobación y el dinero directamente en tu cuenta.</p>
+                </div>
+                <div class="step-item">
+                    <span class="step-number">4</span>
+                    <h3>Gestiona</h3>
+                    <p>Administra tu préstamo fácilmente desde tu panel de usuario.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="cta-apply" class="cta-apply-section">
+        <div class="container">
+            <h2>¡Listo para Empezar?</h2>
+            <p>Consigue el apoyo financiero que necesitas hoy mismo.</p>
+            <a href="/apply" class="btn btn-primary btn-large">Solicitar Mi Préstamo Ahora</a>
+        </div>
+    </section>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

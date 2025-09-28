@@ -1,0 +1,612 @@
+/* Variables CSS */
+:root {
+    --primary-color: #007bff; /* Azul vibrante */
+    --secondary-color: #6c757d; /* Gris para botones secundarios */
+    --accent-color: #28a745; /* Verde para destacar acciones positivas */
+    --text-color: #343a40; /* Gris oscuro para texto */
+    --light-text-color: #f8f9fa; /* Texto claro */
+    --background-light: #f8f9fa;
+    --background-dark: #343a40;
+    --border-color: #dee2e6;
+    --font-family: 'Poppins', sans-serif;
+    --header-height: 70px;
+    --padding-section: 80px 0;
+}
+
+/* Base global */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--accent-color);
+}
+
+ul {
+    list-style: none;
+}
+
+/* Botones */
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: 50px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    border: none;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Un poco más oscuro */
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--light-text-color);
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.btn-large {
+    padding: 15px 35px;
+    font-size: 1.1em;
+}
+
+/* Header */
+.main-header {
+    background-color: var(--background-light);
+    color: var(--text-color);
+    padding: 15px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo a {
+    font-size: 1.8em;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.main-nav ul {
+    display: flex;
+    gap: 25px;
+}
+
+.main-nav a {
+    color: var(--text-color);
+    font-weight: 600;
+    padding: 5px 10px;
+    position: relative;
+}
+
+.main-nav a:not(.btn)::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-color);
+    transition: width 0.2s ease;
+}
+
+.main-nav a:not(.btn):hover::after {
+    width: 100%;
+}
+
+@media (max-width: 992px) {
+    .main-nav a:not(.btn)::after {
+        display: none;
+    }
+}
+
+.main-nav .btn {
+    margin-left: 10px;
+}
+
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: var(--text-color);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(rgba(0, 123, 255, 0.5), rgba(0, 123, 255, 0.3)), url('https://credexia.com/wp-content/uploads/2021/06/fondo_perdido.jpg') center/cover no-repeat; /* Placeholder, reemplaza con tu imagen */
+    color: var(--light-text-color);
+    text-align: center;
+    padding: 150px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 600px;
+}
+
+.hero-section h1 {
+    font-size: 3.5em;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.hero-section .subtitle {
+    font-size: 1.4em;
+    margin-bottom: 40px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 300;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Value Proposition Section */
+.value-props-section {
+    background-color: var(--background-light);
+    padding: var(--padding-section);
+    text-align: center;
+}
+
+.value-props-section h2 {
+    font-size: 2.5em;
+    margin-bottom: 50px;
+    color: var(--text-color);
+}
+
+.props-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+}
+
+.prop-item {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.prop-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.prop-item h3 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: var(--text-color);
+}
+
+.prop-item p {
+    color: #666;
+    font-size: 0.95em;
+}
+
+/* Simulate Section */
+.simulate-section {
+    background-color: #e9f5ff; /* Un azul muy claro */
+    padding: var(--padding-section);
+    text-align: center;
+}
+
+.simulate-section h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.simulate-section p {
+    font-size: 1.1em;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#loan-simulator-root {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 50px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    margin-top: 30px;
+    min-height: 250px; /* Espacio para el simulador React */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* How It Works Section */
+.how-it-works-section {
+    background-color: var(--background-light);
+    padding: var(--padding-section);
+    text-align: center;
+}
+
+.how-it-works-section h2 {
+    font-size: 2.5em;
+    margin-bottom: 50px;
+    color: var(--text-color);
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+}
+
+.step-item {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    position: relative;
+    text-align: left;
+}
+
+.step-number {
+    position: absolute;
+    top: -20px;
+    left: 20px;
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: 700;
+    box-shadow: 0 5px 10px rgba(0, 123, 255, 0.3);
+}
+
+.step-item h3 {
+    font-size: 1.4em;
+    margin-top: 30px; /* Espacio para el número */
+    margin-bottom: 10px;
+    color: var(--text-color);
+}
+
+.step-item p {
+    color: #666;
+}
+
+/* Call to Action (Apply) Section */
+.cta-apply-section {
+    background: linear-gradient(rgba(0, 97, 200, 0.9), rgba(0, 98, 203, 0.7)), url('https://www.larepublica.ec/wp-content/uploads/2014/10/dolares1-e1414624820952.jpg') center/cover no-repeat; /* Placeholder, reemplaza */
+    color: var(--light-text-color);
+    text-align: center;
+    padding: 100px 0;
+}
+
+.cta-apply-section h2 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+.cta-apply-section p {
+    font-size: 1.3em;
+    margin-bottom: 40px;
+    font-weight: 300;
+}
+
+/* Footer */
+.main-footer {
+    background-color: var(--background-dark);
+    color: var(--light-text-color);
+    padding: 50px 0 20px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.main-footer .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 50px;
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+.footer-links ul {
+    margin: 0;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: var(--light-text-color);
+    opacity: 0.8;
+}
+
+.footer-links a:hover {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.social-media {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.social-media a img {
+    width: 28px;
+    height: 28px;
+    filter: invert(1); /* Para que los iconos de placeholder sean blancos */
+    transition: transform 0.3s ease;
+}
+
+.social-media a:hover img {
+    transform: translateY(-3px);
+}
+
+.copyright {
+    width: 100%;
+    margin-top: 30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ================== Media Queries para Responsividad ================== */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 992px) {
+    .main-header .container {
+        flex-wrap: wrap;
+    }
+
+    .main-nav {
+        flex-basis: 100%;
+        order: 3; /* Coloca la navegación debajo del logo y el toggle */
+        display: none; /* Ocultar por defecto */
+        flex-direction: column;
+        text-align: center;
+        width: 100%;
+        margin-top: 15px;
+        background-color: var(--background-light);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.4s ease-out;
+    }
+
+    .main-nav.active {
+        display: flex; /* Mostrar cuando está activo */
+        max-height: 300px; /* Ajusta según el contenido de tu nav */
+    }
+
+    .main-nav ul {
+        flex-direction: column;
+        gap: 0;
+        padding: 10px 0;
+    }
+
+    .main-nav li {
+        margin: 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .main-nav li:last-child {
+        border-bottom: none;
+    }
+
+    .main-nav a {
+        display: block;
+        padding: 15px 20px;
+        color: var(--text-color);
+        font-weight: 500;
+        font-size: 1.1em;
+    }
+
+    .main-nav a:not(.btn)::after {
+        display: none;
+    }
+
+    .main-nav .btn {
+        margin: 10px auto;
+        width: calc(100% - 40px);
+    }
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+        transform: rotate(45deg) translate(5px, 5px);
+    }
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+    .menu-toggle.active span:nth-child(3) {
+        transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .hero-section {
+        padding: 100px 0;
+        min-height: 500px;
+    }
+    .hero-section h1 {
+        font-size: 2.8em;
+    }
+    .hero-section .subtitle {
+        font-size: 1.2em;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+    .btn-large {
+        width: 80%;
+        max-width: 300px;
+    }
+
+    .value-props-section h2,
+    .simulate-section h2,
+    .how-it-works-section h2,
+    .cta-apply-section h2 {
+        font-size: 2em;
+    }
+
+    .prop-item, .step-item {
+        padding: 25px;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+    }
+    .footer-links ul {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+/* Móviles pequeños */
+@media (max-width: 576px) {
+    .logo a {
+        font-size: 1.5em;
+    }
+    .hero-section {
+        padding: 80px 0;
+        min-height: 400px;
+    }
+    .hero-section h1 {
+        font-size: 2.2em;
+    }
+    .hero-section .subtitle {
+        font-size: 1em;
+    }
+
+    .btn-large {
+        width: 90%;
+        font-size: 1em;
+        padding: 12px 25px;
+    }
+
+    .value-props-section h2,
+    .simulate-section h2,
+    .how-it-works-section h2,
+    .cta-apply-section h2 {
+        font-size: 1.8em;
+    }
+
+    .props-grid, .steps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .prop-item, .step-item {
+        margin: 0 10px; /* Para dar un poco de margen en los bordes */
+    }
+
+    .simulate-section p {
+        font-size: 1em;
+    }
+
+    #loan-simulator-root {
+        padding: 30px;
+        margin: 20px 10px;
+    }
+
+    .cta-apply-section h2 {
+        font-size: 2em;
+    }
+    .cta-apply-section p {
+        font-size: 1.1em;
+    }
+
+    .main-footer .container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .footer-links {
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+}

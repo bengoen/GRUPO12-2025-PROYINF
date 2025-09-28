@@ -1,0 +1,59 @@
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-links">
+            <ul>
+                <li><a href="/about">Nosotros</a></li>
+                <li><a href="/faq">Preguntas Frecuentes</a></li>
+                <li><a href="/contact">Contacto</a></li>
+            </ul>
+            <ul>
+                <li><a href="/privacy">Política de Privacidad</a></li>
+                <li><a href="/terms">Términos y Condiciones</a></li>
+                <li><a href="/security">Seguridad</a></li>
+            </ul>
+        </div>
+        <div class="social-media">
+            <a href="#" aria-label="Facebook"><img src="https://via.placeholder.com/24/fff/000?text=F" alt="Facebook"></a>
+            <a href="#" aria-label="Twitter"><img src="https://via.placeholder.com/24/fff/000?text=T" alt="Twitter"></a>
+            <a href="#" aria-label="LinkedIn"><img src="https://via.placeholder.com/24/fff/000?text=L" alt="LinkedIn"></a>
+        </div>
+        <p class="copyright">&copy; <%= new Date().getFullYear() %> Tu Préstamo Digital. Todos los derechos reservados.</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const menuToggle = document.querySelector('.menu-toggle');
+        const mainNav = document.querySelector('.main-nav');
+
+        menuToggle.addEventListener('click', () => {
+            mainNav.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+        });
+
+        // Close nav when a link is clicked (for mobile)
+        document.querySelectorAll('.main-nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (mainNav.classList.contains('active')) {
+                    mainNav.classList.remove('active');
+                    menuToggle.classList.remove('active');
+                }
+            });
+        });
+    });
+    // Aquí podrías montar tu componente React para el simulador
+    // Por ejemplo:
+    // import React from 'react';
+    // import ReactDOM from 'react-dom/client';
+    // import LoanSimulator from '../components/LoanSimulator'; // Asumiendo que tu componente React está en esta ruta
+
+    // const simulatorRoot = document.getElementById('loan-simulator-root');
+    // if (simulatorRoot) {
+    //     const root = ReactDOM.createRoot(simulatorRoot);
+    //     root.render(
+    //         <React.StrictMode>
+    //             <LoanSimulator />
+    //         </React.StrictMode>
+    //     );
+    // }
+</script>
