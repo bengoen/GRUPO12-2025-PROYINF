@@ -1,0 +1,18 @@
+{
+    "name": "docker-node-app",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "dev": "nodemon index.js",
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "bootstrap": "^5.3.8",
+        "ejs": "^3.1.10",
+        "express": "^4.18.2",
+        "morgan": "^1.10.1",
+        "nodemon": "^3.1.10",
+        "pg": "^8.15.6",
+        "wait-port": "^1.1.0"
+    }
+}
