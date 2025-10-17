@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <%- include('partials/head') %>
+  <style>
+    .hero-sim {background: #f0f7ff; padding: 60px 0 20px; text-align:center}
+    .hero-sim h1 {font-weight:700; margin:0 0 10px}
+    .hero-sim p {color:#666}
+  </style>
+  </head>
+<body>
+  <%- include('partials/header') %>
+
+  <section class="hero-sim">
+    <div class="container">
+      <h1>Simulador de Préstamos</h1>
+      <p>Ajusta monto y plazo, compara opciones y confirma tu simulación.</p>
+    </div>
+  </section>
+
+  <section id="simulate" class="simulate-section">
+    <div class="container">
+      <div id="loan-simulator-root">
+        <p>Cargando simulador de préstamos...</p>
+      </div>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
+

@@ -285,6 +285,44 @@ ul {
     align-items: center;
 }
 
+/* Simulador de préstamo (React) */
+.simulator-card { width: 100%; }
+.simulator-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 30px;
+    width: 100%;
+}
+.simulator-inputs label { display:block; font-weight:600; margin: 10px 0 6px; }
+.simulator-inputs input[type="range"] { width:100%; }
+.input-inline { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+.input-inline .form-control { max-width: 220px; }
+.muted { color:#6c757d; }
+
+.simulator-summary { background:#fdfdfd; border:1px solid var(--border-color); border-radius:10px; padding:20px; }
+.simulator-summary h3 { margin-bottom: 10px; }
+.summary-list { padding:0; margin:0 0 10px 0; }
+.summary-list li { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed #eee; }
+.summary-list li.total { font-size:1.2em; border-bottom:none; }
+.summary-list strong { font-weight:700; }
+.totals p { display:flex; justify-content:space-between; margin:4px 0; }
+.actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+
+.offer-cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:25px; width:100%; }
+.offer-card { background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:16px; box-shadow: 0 4px 10px rgba(0,0,0,.04); }
+.offer-card h4 { margin:0 0 10px; }
+.offer-main { font-size:1.4em; font-weight:700; margin:2px 0; }
+.offer-sub { color:#666; margin-bottom:10px; }
+
+.amort-table-wrapper { margin-top:20px; width:100%; overflow:auto; }
+.amort-table { width:100%; border-collapse: collapse; font-size: 0.95em; }
+.amort-table th, .amort-table td { border:1px solid #eee; padding:8px 10px; text-align:right; }
+.amort-table th:first-child, .amort-table td:first-child { text-align:center; }
+
+@media (max-width: 992px) {
+    .simulator-grid { grid-template-columns: 1fr; }
+}
+
 /* How It Works Section */
 .how-it-works-section {
     background-color: var(--background-light);

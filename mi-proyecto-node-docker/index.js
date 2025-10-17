@@ -9,6 +9,10 @@ const indexRoutes = require('./src/routes/index');
 
 const app = express()
 
+// Parse JSON and form bodies for API and web forms
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
 // Ruta de prueba que guarda un mensaje en la base de datos
 app.get('/save', async (req, res) => {
   try {
@@ -46,7 +50,14 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 app.set('static', path.join(__dirname, 'src', 'static'));
 app.set('view engine', 'ejs');
 
+// Serve vendor assets (React UMD) from node_modules under /vendor
+app.use('/vendor', express.static(path.join(__dirname, 'node_modules')))
+
 app.use(indexRoutes)
+
+// API routes for HU001
+app.use('/api/loan-requests', require('./src/routes/loanRequests'))
+app.use('/api/applicants', require('./src/routes/applicants'))
 
 //app.use(express.static(join(__dirname, 'src', 'public')))
 app.use(express.static(path.join(__dirname, 'src', 'public')));

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <%- include('partials/head') %>
+  <style>
+    .reg-wrap { background:#f8fbff; padding:40px 0; }
+    .reg-card { background:#fff; border:1px solid var(--border-color); border-radius:12px; padding:24px; box-shadow:0 6px 18px rgba(0,0,0,.06) }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:14px }
+    .grid label { font-weight:600; margin-bottom:6px; display:block }
+    .grid input, .grid select, .grid textarea { width:100%; padding:10px 12px; border:1px solid #dee2e6; border-radius:8px }
+    .flash { margin:8px 0 16px; color:#0a7c2e }
+  </style>
+  <script>
+    // Si el servidor entrega applicantId, persistimos para enlazar futuras simulaciones
+    document.addEventListener('DOMContentLoaded', function(){
+      var id = <%- typeof applicantId !== 'undefined' && applicantId ? JSON.stringify(applicantId) : 'null' %>;
+      if(id){ try { localStorage.setItem('applicantId', String(id)); } catch(e){} }
+    });
+  </script>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <section class="reg-wrap">
+    <div class="container">
+      <h2 class="mb-3">Registro de Solicitante</h2>
+      <% if (typeof flash === 'string' && flash) { %>
+        <p class="flash"><%= flash %></p>
+      <% } %>
+      <form method="POST" action="/register">
+        <div class="reg-card">
+          <h4>Datos personales</h4>
+          <div class="grid">
+            <div><label>Nombre</label><input name="first_name" required></div>
+            <div><label>Apellido</label><input name="last_name" required></div>
+            <div><label>RUT / Cédula (sin puntos)</label><input name="national_id" required></div>
+            <div><label>Fecha de nacimiento</label><input type="date" name="date_of_birth" required></div>
+            <div><label>Nacionalidad</label><input name="nationality"></div>
+            <div><label>Email</label><input type="email" name="email" required></div>
+            <div><label>Teléfono</label><input name="phone"></div>
+          </div>
+        </div>
+
+        <div class="reg-card" style="margin-top:16px">
+          <h4>Domicilio</h4>
+          <div class="grid">
+            <div style="grid-column: 1/-1"><label>Dirección</label><input name="address" required></div>
+            <div><label>Tipo comprobante</label>
+              <select name="address_proof_type">
+                <option value="">Seleccionar…</option>
+                <option>Boleta servicio</option>
+                <option>Contrato arriendo</option>
+                <option>Certificado residencia</option>
+              </select>
+            </div>
+            <div><label>Referencia (número/URL)</label><input name="address_proof_ref"></div>
+          </div>
+        </div>
+
+        <div class="reg-card" style="margin-top:16px">
+          <h4>Actividad e ingresos</h4>
+          <div class="grid">
+            <div>
+              <label>Fuente de ingresos</label>
+              <select name="income_source">
+                <option value="">Seleccionar…</option>
+                <option>Dependiente</option>
+                <option>Independiente</option>
+                <option>Honorarios</option>
+                <option>Estudiante</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div><label>Ingreso mensual (CLP)</label><input type="number" step="1000" name="monthly_income"></div>
+            <div><label>Tipo comprobante</label><input name="income_proof_type" placeholder="Liquidación, boleta, cert. alumno, etc."></div>
+            <div><label>Referencia (número/URL)</label><input name="income_proof_ref"></div>
+            <div style="grid-column: 1/-1"><label>Historial financiero (opcional)</label><textarea name="financial_history_note" rows="3"></textarea></div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px; display:flex; gap:10px; align-items:center">
+          <button class="btn btn-primary">Guardar registro</button>
+          <a class="btn btn-secondary" href="/simulator">Ir al simulador</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
