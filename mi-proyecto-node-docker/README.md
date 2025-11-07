@@ -108,7 +108,6 @@ Haciendo simplemente eso ya podemos usar la pagina.
 
 Este hito implementa el monitoreo del estado de las solicitudes de préstamo, incluyendo la actualización de estado, la generación de eventos y el envío simulado de notificaciones a través de un *worker* interno.
 
----
 
 ### ¿Qué se agregó?
 - **Endpoints REST** para consultar y actualizar el estado de las solicitudes:
@@ -124,7 +123,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
   - `STATE_CHANGED` → al modificar el estado.
   - `NOTIFICATION_SENT` → cuando el worker procesa la notificación.
 
----
 
 ### Cambios en la base de datos
 - Script de inicialización `db/init/001_hu002.sql`:
@@ -134,7 +132,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
     - `notifications` → cola de mensajes pendientes/enviados.
   - Trigger `on_lr_state_change` → registra automáticamente un evento `STATE_CHANGED` al actualizar el estado en `loan_requests`.
 
----
 
 ### Archivos modificados / añadidos
 - `src/routes/loanStatus.js`  
@@ -160,41 +157,41 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
 
 1. Levantar el entorno Docker
 
-   docker compose up -d
+   - docker compose up -d
 
 
 2. Crear una solicitud dummy
 
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
+  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
     -Method POST -ContentType "application/json" `
     -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
 
 
 3. Consultar estado
 
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
+  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
 
 
 4. Cambiar estado (dispara notificación)
 
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
+  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
     -Method PATCH -ContentType "application/json" `
     -Body '{"status":"APPROVED"}'
 
 
 5. Ver timeline
 
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
+  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
 
 
   6. Ver logs
 
-  docker compose logs -f app
+  - docker compose logs -f app
 
 
-  Debe aparecer:
+  - Debe aparecer:
 
-  [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
+  - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
 
 ### Flujo HU002 cubierto
 
