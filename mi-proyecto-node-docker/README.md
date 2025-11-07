@@ -186,11 +186,12 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
 
 6. Ver logs
 
-  - docker compose logs -f app
+   - docker compose logs -f app
 
    - Debe aparecer:
 
    - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
+
 
 ### Flujo HU002 cubierto
 
