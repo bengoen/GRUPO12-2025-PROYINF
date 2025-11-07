@@ -12,11 +12,11 @@ Este es un ejemplo de una aplicación Node.js usando Express, Docker y PostgreSQ
 ## Instalación
 
 ### 1. Clonar el repositorio
-git clone https://github.com/MatiasBV/analisis-y-diseno-de-software.git  
+`git clone https://github.com/bengoen/GRUPO12-2025-PROYINF`
 (debe tener docker-desktop abierto en todo momento)
 Ejecutar en terminal:
 
-1. Deben navegar hasta la carpeta analisis-y-diseno-de-software/mi-proyecto-node-docker  
+1. Deben navegar hasta la carpeta GRUPO12-2025-PROYINF/mi-proyecto-node-docker  
 
 2. (les instalará las dependencias se suele demorar un poco la primera vez con esto levantan el proyecto)  
 docker compose up --build
@@ -24,7 +24,7 @@ docker compose up --build
 (para detener los contenedores)  
 docker compose down -v
 
-si no les ejecuta asegurense de estar en la carpeta correcta  
+si no les ejecuta asegurense de estar en la carpeta correcta y que el puerto por defecto 5432 para la base de datos esté libre.  
 si trabajan desde windows deben tener instalado WSL2 y tenerlo activado en docker desktop  
 esto se puede verificar en  
 Configuración   
@@ -48,9 +48,6 @@ Para reiniciar un servicio específico:
   - docker compose restart nombre_servicio
 Para detener todos los contenedores sin eliminar volúmenes:
   - docker compose down
-
-
-
 
 ## HU001 – Simular Préstamo (React + Node + PostgreSQL)
 
@@ -108,7 +105,6 @@ Haciendo simplemente eso ya podemos usar la pagina.
 
 Este hito implementa el monitoreo del estado de las solicitudes de préstamo, incluyendo la actualización de estado, la generación de eventos y el envío simulado de notificaciones a través de un *worker* interno.
 
-
 ### ¿Qué se agregó?
 - **Endpoints REST** para consultar y actualizar el estado de las solicitudes:
   - `GET /api/loan-requests?applicantId=1` → lista solicitudes por usuario.
@@ -123,7 +119,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
   - `STATE_CHANGED` → al modificar el estado.
   - `NOTIFICATION_SENT` → cuando el worker procesa la notificación.
 
-
 ### Cambios en la base de datos
 - Script de inicialización `db/init/001_hu002.sql`:
   - Crea el tipo `ENUM loan_status` con valores válidos (`PENDING_EVAL`, `APPROVED`, `REJECTED`, `CONTRACT_PENDING`, `CONTRACT_SIGNED`, `ACTIVE`, `DISBURSED`).
@@ -131,7 +126,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
     - `loan_request_events` → registro histórico de cambios y notificaciones.
     - `notifications` → cola de mensajes pendientes/enviados.
   - Trigger `on_lr_state_change` → registra automáticamente un evento `STATE_CHANGED` al actualizar el estado en `loan_requests`.
-
 
 ### Archivos modificados / añadidos
 - `src/routes/loanStatus.js`  
@@ -156,55 +150,35 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
 ### Cómo usar
 
 1. Levantar el entorno Docker
-
    - docker compose up -d
 
-
 2. Crear una solicitud
-
    - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
      -Method POST -ContentType "application/json" `
      -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
 
-
 3. Consultar estado
-
    - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
 
-
 4. Cambiar estado (dispara notificación)
-
    - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
     -Method PATCH -ContentType "application/json" `
     -Body '{"status":"APPROVED"}'
 
-
 5. Ver timeline
-
    - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
 
-
 6. Ver logs
-
    - docker compose logs -f app
-
    - Debe aparecer:
-
    - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
 
-
 ### Flujo HU002 cubierto
-
   - El cliente puede consultar sus solicitudes y ver su estado actual.
-
   - Al cambiar de estado, se registra un evento STATE_CHANGED y se encola una notificación.
-
   - El worker procesa las notificaciones y genera NOTIFICATION_SENT.
-
   - El usuario puede revisar todo el historial en /api/loan-requests/:id/timeline o en la vista /requests/:id.
 
-  Notas
-
-  El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
-
-  El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
+#### Notas
+  - El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
+  - El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
