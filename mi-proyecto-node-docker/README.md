@@ -56,7 +56,7 @@ Para detener todos los contenedores sin eliminar volúmenes:
 
 Este hito agrega un simulador de préstamos realista, integrado a la página existente pero implementado con React en el front y Node.js + PostgreSQL en el back.
 
-### ¿Qué se agregó?
+## ¿Qué se agregó?
 - Componente React embebido que permite simular un préstamo directamente en la sección "Simula Tu Préstamo Ideal".
 - Cálculo bancario realista:
   - Tasa anual nominal (TNA) por tramos según monto y plazo; convertida a tasa efectiva mensual.
@@ -66,12 +66,12 @@ Este hito agrega un simulador de préstamos realista, integrado a la página exi
   - Tarjetas de “opciones rápidas” para comparar distintos plazos.
 - API REST para registrar la simulación como solicitud pendiente: `POST /api/loan-requests` (guarda en PostgreSQL).
 
-### Registro de solicitantes
+## Registro de solicitantes
 - Nueva página: `GET /register` con formulario para registrarse como solicitante (datos personales, domicilio con comprobante, actividad/ingresos y opcional historial financiero). Valida mayoría de edad (≥18).
 - API: `POST /api/applicants` para registrar vía JSON (útil para pruebas o front futuro).
 - Las solicitudes de préstamo (`/api/loan-requests`) aceptan opcional `applicantId` para asociar la simulación a un solicitante.
 
-### Archivos modificados/añadidos
+## Archivos modificados/añadidos
 - `src/public/js/loanSimulator.js`: Componente React (sin JSX) con lógica de simulación, amortización y envío a la API.
 - `src/public/css/styles.css`: Estilos del simulador (`.simulator-*`, `.offer-*`, tabla de amortización) respetando el look & feel existente.
 - `src/views/partials/head.ejs`: Carga de React/ReactDOM desde `node_modules` vía `/vendor` y del script del simulador.
@@ -79,7 +79,7 @@ Este hito agrega un simulador de préstamos realista, integrado a la página exi
 - `src/routes/loanRequests.js`: Nueva ruta para crear solicitudes; crea tabla si no existe.
 - `package.json`: Se agrega `react-dom` como dependencia.
 
-### Cómo usar
+## Cómo usar
 1. Levantar con Docker (recomendado):
    - `docker compose up --build`
    - Abrir `http://localhost:3000`
