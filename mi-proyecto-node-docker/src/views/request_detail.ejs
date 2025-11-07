@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solicitud #<%= id %></title>
+  <%- include('partials/head') %>
+  <style>
+    .wrap { max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    .card { border:1px solid #ddd; border-radius:10px; padding:14px; margin:12px 0; }
+    details summary { cursor:pointer }
+    pre { background:#f7f7f7; border:1px solid #eee; border-radius:8px; padding:8px; }
+  </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+<main class="wrap" id="req-root" data-id="<%= id %>">
+  <a href="/requests" class="btn btn-link p-0" style="text-decoration:none;">&larr; Volver</a>
+  <h1 class="mt-2 mb-2">Solicitud #<%= id %></h1>
+
+  <div id="status" class="card">Cargando estado...</div>
+
+  <h3 class="mt-3">Línea de tiempo</h3>
+  <ol id="timeline" style="padding-left: 20px;">
+    <li>Cargando eventos...</li>
+  </ol>
+</main>
+
+
+  <%- include('partials/footer') %>
+
+  <script>
+    (function () {
+      const id = Number(document.getElementById('req-root')?.dataset?.id);
+
+
+      async function loadStatus() {
+        try {
+          const res = await fetch(`/api/loan-requests/${id}/status`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const s = await res.json();
+
+          const updated = s.updated_at ? new Date(s.updated_at).toLocaleString() : '—';
+          const next = Array.isArray(s.next_actions) && s.next_actions.length
+            ? (' · Próximas acciones: ' + s.next_actions.join(', '))
+            : '';
+
+          document.getElementById('status').innerHTML =
+            `<b>Estado:</b> ${s.status} <small>(actualizado: ${updated})</small>${next}`;
+        } catch (err) {
+          console.error(err);
+          document.getElementById('status').innerHTML =
+            `<span style="color:#b00020;">No se pudo cargar el estado.</span>`;
+        }
+      }
+
+      async function loadTimeline() {
+        try {
+          const res = await fetch(`/api/loan-requests/${id}/timeline`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+
+          if (!Array.isArray(data) || data.length === 0) {
+            document.getElementById('timeline').innerHTML = '<li>(Sin eventos aún)</li>';
+            return;
+          }
+
+          document.getElementById('timeline').innerHTML = data.map(ev => {
+            const when = ev.created_at ? new Date(ev.created_at).toLocaleString() : '—';
+            const payload = ev.event_data ? JSON.stringify(ev.event_data, null, 2) : '{}';
+            return `
+              <li style="margin-bottom:10px;">
+                <b>${ev.event_type}</b> — ${when}
+                <details style="margin-top:4px;">
+                  <summary>Ver datos</summary>
+                  <pre>${payload}</pre>
+                </details>
+              </li>`;
+          }).join('');
+        } catch (err) {
+          console.error(err);
+          document.getElementById('timeline').innerHTML =
+            '<li style="color:#b00020;">No se pudo cargar la línea de tiempo.</li>';
+        }
+      }
+
+      async function refresh() { await loadStatus(); await loadTimeline(); }
+      refresh();
+      setInterval(refresh, 10000);
+    })();
+  </script>
+</body>
+</html>

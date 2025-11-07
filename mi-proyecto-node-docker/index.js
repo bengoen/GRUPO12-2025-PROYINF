@@ -6,8 +6,11 @@ const express = require('express');
 const path = require('path');
 const pool = require('./db'); // Importar la conexión
 const indexRoutes = require('./src/routes/index');
+const loanStatusRouterFactory = require('./src/routes/loanStatus');
+const startNotificationWorker = require('./src/workers/notificationWorker');
 
 const app = express()
+const stopWorker = startNotificationWorker(pool);
 
 // Parse JSON and form bodies for API and web forms
 app.use(express.json())
@@ -58,10 +61,23 @@ app.use(indexRoutes)
 // API routes for HU001
 app.use('/api/loan-requests', require('./src/routes/loanRequests'))
 app.use('/api/applicants', require('./src/routes/applicants'))
+app.use('/api', loanStatusRouterFactory(pool));
 
 //app.use(express.static(join(__dirname, 'src', 'public')))
 app.use(express.static(path.join(__dirname, 'src', 'public')));
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
+});
+
+
+process.on('SIGTERM', stopWorker);
+process.on('SIGINT', stopWorker);
+
+// vistas HU002
+app.get('/requests', (req, res) => res.render('requests'));
+app.get('/requests/:id', (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).send('id inválido');
+  res.render('request_detail', { id });
 });

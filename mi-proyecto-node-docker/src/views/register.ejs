@@ -16,7 +16,7 @@
   <script>
     // Si el servidor entrega applicantId, persistimos para enlazar futuras simulaciones
     document.addEventListener('DOMContentLoaded', function(){
-      var id = <%- typeof applicantId !== 'undefined' && applicantId ? JSON.stringify(applicantId) : 'null' %>;
+      var id = '<%- typeof applicantId !== "undefined" && applicantId ? JSON.stringify(applicantId) : "null" %>';
       if(id){ try { localStorage.setItem('applicantId', String(id)); } catch(e){} }
     });
   </script>

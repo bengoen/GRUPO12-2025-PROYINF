@@ -103,3 +103,111 @@ Para levantar los servicios del Docker recordar:
 docker-compose up -d
 
 Haciendo simplemente eso ya podemos usar la pagina.
+
+## HU002 – Monitorear el Estado de mi Solicitud de Préstamo (Node.js + PostgreSQL + Worker)
+
+Este hito implementa el monitoreo del estado de las solicitudes de préstamo, incluyendo la actualización de estado, la generación de eventos y el envío simulado de notificaciones a través de un *worker* interno.
+
+---
+
+### ¿Qué se agregó?
+- **Endpoints REST** para consultar y actualizar el estado de las solicitudes:
+  - `GET /api/loan-requests?applicantId=1` → lista solicitudes por usuario.
+  - `GET /api/loan-requests/:id/status` → obtiene el estado actual y posibles próximas acciones.
+  - `PATCH /api/loan-requests/:id/status` → cambia el estado y encola una notificación.
+  - `GET /api/loan-requests/:id/timeline` → devuelve el historial de eventos asociados.
+- **Worker de notificaciones (notificationWorker.js)**:
+  - Procesa periódicamente las notificaciones encoladas.
+  - Inserta en la tabla `loan_request_events` el evento `NOTIFICATION_SENT`.
+  - Actualiza el estado de la notificación a `SENT`.
+- **Eventos automáticos registrados en base de datos:**
+  - `STATE_CHANGED` → al modificar el estado.
+  - `NOTIFICATION_SENT` → cuando el worker procesa la notificación.
+
+---
+
+### Cambios en la base de datos
+- Script de inicialización `db/init/001_hu002.sql`:
+  - Crea el tipo `ENUM loan_status` con valores válidos (`PENDING_EVAL`, `APPROVED`, `REJECTED`, `CONTRACT_PENDING`, `CONTRACT_SIGNED`, `ACTIVE`, `DISBURSED`).
+  - Tablas adicionales:
+    - `loan_request_events` → registro histórico de cambios y notificaciones.
+    - `notifications` → cola de mensajes pendientes/enviados.
+  - Trigger `on_lr_state_change` → registra automáticamente un evento `STATE_CHANGED` al actualizar el estado en `loan_requests`.
+
+---
+
+### Archivos modificados / añadidos
+- `src/routes/loanStatus.js`  
+  Define todos los endpoints HU002 y gestiona el cambio de estado con `::loan_status` y encolado de notificaciones.
+- `src/workers/notificationWorker.js`  
+  Worker en background que procesa la tabla `notifications`, genera eventos `NOTIFICATION_SENT` y actualiza el estado `SENT`.
+- `src/views/requests.ejs`  
+  Vista para listar las solicitudes y visualizar el estado actual.
+- `src/views/request_detail.ejs`  
+  Vista detallada que consulta dinámicamente el estado y línea de tiempo mediante `fetch`.
+- `index.js`  
+  Se integra el router HU002:
+  ```js
+  const loanStatusRouterFactory = require('./src/routes/loanStatus');
+  app.use('/api', loanStatusRouterFactory(pool));
+
+  Y se inicializa el worker:
+
+  const startNotificationWorker = require('./src/workers/notificationWorker');
+  startNotificationWorker(pool);
+
+### Cómo usar
+
+1. Levantar el entorno Docker
+
+   docker compose up -d
+
+
+2. Crear una solicitud dummy
+
+  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
+    -Method POST -ContentType "application/json" `
+    -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
+
+
+3. Consultar estado
+
+  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
+
+
+4. Cambiar estado (dispara notificación)
+
+  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
+    -Method PATCH -ContentType "application/json" `
+    -Body '{"status":"APPROVED"}'
+
+
+5. Ver timeline
+
+  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
+
+
+  6. Ver logs
+
+  docker compose logs -f app
+
+
+  Debe aparecer:
+
+  [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
+
+### Flujo HU002 cubierto
+
+  - El cliente puede consultar sus solicitudes y ver su estado actual.
+
+  - Al cambiar de estado, se registra un evento STATE_CHANGED y se encola una notificación.
+
+  - El worker procesa las notificaciones y genera NOTIFICATION_SENT.
+
+  - El usuario puede revisar todo el historial en /api/loan-requests/:id/timeline o en la vista /requests/:id.
+
+  Notas
+
+  El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
+
+  El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
