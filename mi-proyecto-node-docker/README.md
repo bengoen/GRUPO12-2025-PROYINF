@@ -160,38 +160,38 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
    - docker compose up -d
 
 
-2. Crear una solicitud dummy
+2. Crear una solicitud
 
-  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
-    -Method POST -ContentType "application/json" `
-    -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
+     -Method POST -ContentType "application/json" `
+     -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
 
 
 3. Consultar estado
 
-  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
 
 
 4. Cambiar estado (dispara notificación)
 
-  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
     -Method PATCH -ContentType "application/json" `
     -Body '{"status":"APPROVED"}'
 
 
 5. Ver timeline
 
-  - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
 
 
   6. Ver logs
 
-  - docker compose logs -f app
+   - docker compose logs -f app
 
 
-  - Debe aparecer:
+   - Debe aparecer:
 
-  - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
+   - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
 
 ### Flujo HU002 cubierto
 
