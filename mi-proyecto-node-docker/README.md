@@ -184,10 +184,9 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
    - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
 
 
-  6. Ver logs
+6. Ver logs
 
-   - docker compose logs -f app
-
+  - docker compose logs -f app
 
    - Debe aparecer:
 
