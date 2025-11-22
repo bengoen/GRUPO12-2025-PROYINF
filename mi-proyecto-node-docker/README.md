@@ -12,11 +12,11 @@ Este es un ejemplo de una aplicación Node.js usando Express, Docker y PostgreSQ
 ## Instalación
 
 ### 1. Clonar el repositorio
-git clone https://github.com/MatiasBV/analisis-y-diseno-de-software.git  
+`git clone https://github.com/bengoen/GRUPO12-2025-PROYINF`
 (debe tener docker-desktop abierto en todo momento)
 Ejecutar en terminal:
 
-1. Deben navegar hasta la carpeta analisis-y-diseno-de-software/mi-proyecto-node-docker  
+1. Deben navegar hasta la carpeta GRUPO12-2025-PROYINF/mi-proyecto-node-docker  
 
 2. (les instalará las dependencias se suele demorar un poco la primera vez con esto levantan el proyecto)  
 docker compose up --build
@@ -24,7 +24,7 @@ docker compose up --build
 (para detener los contenedores)  
 docker compose down -v
 
-si no les ejecuta asegurense de estar en la carpeta correcta  
+si no les ejecuta asegurense de estar en la carpeta correcta y que el puerto por defecto 5432 para la base de datos esté libre.  
 si trabajan desde windows deben tener instalado WSL2 y tenerlo activado en docker desktop  
 esto se puede verificar en  
 Configuración   
@@ -49,14 +49,11 @@ Para reiniciar un servicio específico:
 Para detener todos los contenedores sin eliminar volúmenes:
   - docker compose down
 
-
-
-
 ## HU001 – Simular Préstamo (React + Node + PostgreSQL)
 
 Este hito agrega un simulador de préstamos realista, integrado a la página existente pero implementado con React en el front y Node.js + PostgreSQL en el back.
 
-### ¿Qué se agregó?
+## ¿Qué se agregó?
 - Componente React embebido que permite simular un préstamo directamente en la sección "Simula Tu Préstamo Ideal".
 - Cálculo bancario realista:
   - Tasa anual nominal (TNA) por tramos según monto y plazo; convertida a tasa efectiva mensual.
@@ -66,12 +63,12 @@ Este hito agrega un simulador de préstamos realista, integrado a la página exi
   - Tarjetas de “opciones rápidas” para comparar distintos plazos.
 - API REST para registrar la simulación como solicitud pendiente: `POST /api/loan-requests` (guarda en PostgreSQL).
 
-### Registro de solicitantes
+## Registro de solicitantes
 - Nueva página: `GET /register` con formulario para registrarse como solicitante (datos personales, domicilio con comprobante, actividad/ingresos y opcional historial financiero). Valida mayoría de edad (≥18).
 - API: `POST /api/applicants` para registrar vía JSON (útil para pruebas o front futuro).
 - Las solicitudes de préstamo (`/api/loan-requests`) aceptan opcional `applicantId` para asociar la simulación a un solicitante.
 
-### Archivos modificados/añadidos
+## Archivos modificados/añadidos
 - `src/public/js/loanSimulator.js`: Componente React (sin JSX) con lógica de simulación, amortización y envío a la API.
 - `src/public/css/styles.css`: Estilos del simulador (`.simulator-*`, `.offer-*`, tabla de amortización) respetando el look & feel existente.
 - `src/views/partials/head.ejs`: Carga de React/ReactDOM desde `node_modules` vía `/vendor` y del script del simulador.
@@ -79,7 +76,7 @@ Este hito agrega un simulador de préstamos realista, integrado a la página exi
 - `src/routes/loanRequests.js`: Nueva ruta para crear solicitudes; crea tabla si no existe.
 - `package.json`: Se agrega `react-dom` como dependencia.
 
-### Cómo usar
+## Cómo usar
 1. Levantar con Docker (recomendado):
    - `docker compose up --build`
    - Abrir `http://localhost:3000`
@@ -108,8 +105,6 @@ Haciendo simplemente eso ya podemos usar la pagina.
 
 Este hito implementa el monitoreo del estado de las solicitudes de préstamo, incluyendo la actualización de estado, la generación de eventos y el envío simulado de notificaciones a través de un *worker* interno.
 
----
-
 ### ¿Qué se agregó?
 - **Endpoints REST** para consultar y actualizar el estado de las solicitudes:
   - `GET /api/loan-requests?applicantId=1` → lista solicitudes por usuario.
@@ -124,8 +119,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
   - `STATE_CHANGED` → al modificar el estado.
   - `NOTIFICATION_SENT` → cuando el worker procesa la notificación.
 
----
-
 ### Cambios en la base de datos
 - Script de inicialización `db/init/001_hu002.sql`:
   - Crea el tipo `ENUM loan_status` con valores válidos (`PENDING_EVAL`, `APPROVED`, `REJECTED`, `CONTRACT_PENDING`, `CONTRACT_SIGNED`, `ACTIVE`, `DISBURSED`).
@@ -133,8 +126,6 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
     - `loan_request_events` → registro histórico de cambios y notificaciones.
     - `notifications` → cola de mensajes pendientes/enviados.
   - Trigger `on_lr_state_change` → registra automáticamente un evento `STATE_CHANGED` al actualizar el estado en `loan_requests`.
-
----
 
 ### Archivos modificados / añadidos
 - `src/routes/loanStatus.js`  
@@ -159,55 +150,35 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
 ### Cómo usar
 
 1. Levantar el entorno Docker
+   - docker compose up -d
 
-   docker compose up -d
-
-
-2. Crear una solicitud dummy
-
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
-    -Method POST -ContentType "application/json" `
-    -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
-
+2. Crear una solicitud
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests" `
+     -Method POST -ContentType "application/json" `
+     -Body '{"amount":1000000,"termMonths":12,"monthlyRate":0.02,"monthlyPayment":95000,"applicantId":1}'
 
 3. Consultar estado
-
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
-
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" -Method GET
 
 4. Cambiar estado (dispara notificación)
-
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/status" `
     -Method PATCH -ContentType "application/json" `
     -Body '{"status":"APPROVED"}'
 
-
 5. Ver timeline
+   - Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
 
-  Invoke-RestMethod -Uri "http://localhost:3000/api/loan-requests/1/timeline" -Method GET
-
-
-  6. Ver logs
-
-  docker compose logs -f app
-
-
-  Debe aparecer:
-
-  [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
+6. Ver logs
+   - docker compose logs -f app
+   - Debe aparecer:
+   - [NOTIFY] status_changed via EMAIL for LR 1 { newStatus: 'APPROVED' }
 
 ### Flujo HU002 cubierto
-
   - El cliente puede consultar sus solicitudes y ver su estado actual.
-
   - Al cambiar de estado, se registra un evento STATE_CHANGED y se encola una notificación.
-
   - El worker procesa las notificaciones y genera NOTIFICATION_SENT.
-
   - El usuario puede revisar todo el historial en /api/loan-requests/:id/timeline o en la vista /requests/:id.
 
-  Notas
-
-  El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
-
-  El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
+#### Notas
+  - El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
+  - El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
