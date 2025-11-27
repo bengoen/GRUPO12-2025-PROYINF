@@ -8,8 +8,6 @@
   <style>
     .wrap { max-width: 960px; margin: 24px auto; padding: 0 16px; }
     .card { border:1px solid #ddd; border-radius:10px; padding:14px; margin:12px 0; }
-    details summary { cursor:pointer }
-    pre { background:#f7f7f7; border:1px solid #eee; border-radius:8px; padding:8px; }
   </style>
 </head>
 <body>
@@ -20,11 +18,6 @@
   <h1 class="mt-2 mb-2">Solicitud #<%= id %></h1>
 
   <div id="status" class="card">Cargando estado...</div>
-
-  <h3 class="mt-3">Línea de tiempo</h3>
-  <ol id="timeline" style="padding-left: 20px;">
-    <li>Cargando eventos...</li>
-  </ol>
 </main>
 
 
@@ -34,61 +27,75 @@
     (function () {
       const id = Number(document.getElementById('req-root')?.dataset?.id);
 
+      function humanStatus(code) {
+        switch (code) {
+          case 'PENDING_EVAL': return 'Pendiente de evaluación';
+          case 'APPROVED': return 'Aprobado';
+          case 'REJECTED': return 'Rechazado';
+          case 'CONTRACT_PENDING': return 'Falta firmar contrato';
+          case 'CONTRACT_SIGNED': return 'Contrato firmado';
+          case 'ACTIVE': return 'Activo';
+          case 'DISBURSED': return 'Desembolsado';
+          default: return code || '';
+        }
+      }
 
-      async function loadStatus() {
+      async function loadSummary() {
         try {
-          const res = await fetch(`/api/loan-requests/${id}/status`);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const s = await res.json();
+          const [statusRes, loanRes] = await Promise.all([
+            fetch(`/api/loan-requests/${id}/status`),
+            fetch(`/api/loan-requests/${id}/installments`)
+          ]);
+          if (!statusRes.ok) throw new Error('HTTP ' + statusRes.status);
+          const s = await statusRes.json();
 
-          const updated = s.updated_at ? new Date(s.updated_at).toLocaleString() : '—';
-          const next = Array.isArray(s.next_actions) && s.next_actions.length
+          let loan = null;
+          if (loanRes.ok) {
+            const data = await loanRes.json();
+            loan = data && data.loan ? data.loan : null;
+          }
+
+          const updated = s.updated_at ? new Date(s.updated_at).toLocaleString() : '―';
+          const actions = Array.isArray(s.next_actions) && s.next_actions.length
             ? (' · Próximas acciones: ' + s.next_actions.join(', '))
             : '';
 
+          const amountText = loan && loan.amount != null ? `Monto: <b>${loan.amount}</b> · ` : '';
+          const termText = loan && loan.term_months != null ? `Plazo: <b>${loan.term_months}</b> meses · ` : '';
+          const cuotaText = loan && loan.monthly_payment != null ? `Cuota estimada: <b>${loan.monthly_payment}</b>` : '';
+
           document.getElementById('status').innerHTML =
-            `<b>Estado:</b> ${s.status} <small>(actualizado: ${updated})</small>${next}`;
+            `<div><b>Estado:</b> ${humanStatus(s.status)} <small>(actualizado: ${updated})</small>${actions}</div>
+             <div style="margin-top:8px;">${amountText}${termText}${cuotaText}</div>
+             <div style="margin-top:8px;">
+               <button class="btn btn-primary btn-sm me-2" onclick="goToContract(${id})">Revisar y firmar contrato</button>
+               <button class="btn btn-secondary btn-sm" onclick="goToActiveLoans()">Ver préstamos activos</button>
+             </div>`;
         } catch (err) {
           console.error(err);
           document.getElementById('status').innerHTML =
-            `<span style="color:#b00020;">No se pudo cargar el estado.</span>`;
+            `<span style="color:#b00020;">No se pudo cargar la información de la solicitud.</span>`;
         }
       }
 
-      async function loadTimeline() {
-        try {
-          const res = await fetch(`/api/loan-requests/${id}/timeline`);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const data = await res.json();
+      loadSummary();
 
-          if (!Array.isArray(data) || data.length === 0) {
-            document.getElementById('timeline').innerHTML = '<li>(Sin eventos aún)</li>';
-            return;
-          }
+      window.goToContract = function (loanId) {
+        if (!Number.isFinite(loanId)) return;
+        window.location.href = `/requests/${loanId}/contract`;
+      };
 
-          document.getElementById('timeline').innerHTML = data.map(ev => {
-            const when = ev.created_at ? new Date(ev.created_at).toLocaleString() : '—';
-            const payload = ev.event_data ? JSON.stringify(ev.event_data, null, 2) : '{}';
-            return `
-              <li style="margin-bottom:10px;">
-                <b>${ev.event_type}</b> — ${when}
-                <details style="margin-top:4px;">
-                  <summary>Ver datos</summary>
-                  <pre>${payload}</pre>
-                </details>
-              </li>`;
-          }).join('');
-        } catch (err) {
-          console.error(err);
-          document.getElementById('timeline').innerHTML =
-            '<li style="color:#b00020;">No se pudo cargar la línea de tiempo.</li>';
+      window.goToActiveLoans = function () {
+        let aid = null;
+        try { aid = localStorage.getItem('applicantId') || null; } catch (_) {}
+        if (aid) {
+          window.location.href = `/my-loans?applicantId=${encodeURIComponent(aid)}`;
+        } else {
+          window.location.href = '/my-loans';
         }
-      }
-
-      async function refresh() { await loadStatus(); await loadTimeline(); }
-      refresh();
-      setInterval(refresh, 10000);
+      };
     })();
   </script>
 </body>
 </html>
+

@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const pool = require('../../db')
+const bcrypt = require('bcryptjs')
 
 const ensureApplicants = async () => {
   await pool.query(`
@@ -21,9 +22,11 @@ const ensureApplicants = async () => {
       income_proof_type TEXT,
       income_proof_ref TEXT,
       financial_history_note TEXT,
+      password_hash TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `)
+  await pool.query('ALTER TABLE applicants ADD COLUMN IF NOT EXISTS password_hash TEXT')
 }
 
 function yearsBetween(d1, d2) {
@@ -46,24 +49,30 @@ router.post('/', async (req, res) => {
     const age = yearsBetween(dob, new Date())
     if (age < 18) return res.status(400).json({ error: 'Debe ser mayor de 18 años' })
 
+    let passwordHash = null
+    if (b.password) {
+      passwordHash = await bcrypt.hash(String(b.password), 10)
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO applicants (
         national_id, first_name, last_name, email, phone, date_of_birth, nationality,
         address, address_proof_type, address_proof_ref,
         income_source, monthly_income, income_proof_type, income_proof_ref,
-        financial_history_note
+        financial_history_note, password_hash
       ) VALUES (
         $1,$2,$3,$4,$5,$6,$7,
         $8,$9,$10,
         $11,$12,$13,$14,
-        $15
+        $15,$16
       ) RETURNING *`,
       [
         b.national_id, b.first_name, b.last_name, b.email, b.phone || null,
         b.date_of_birth, b.nationality || null,
         b.address, b.address_proof_type || null, b.address_proof_ref || null,
         b.income_source || null, b.monthly_income || null, b.income_proof_type || null, b.income_proof_ref || null,
-        b.financial_history_note || null
+        b.financial_history_note || null,
+        passwordHash
       ]
     )
     res.status(201).json(rows[0])
@@ -82,6 +91,27 @@ router.get('/', async (_req, res) => {
     const { rows } = await pool.query('SELECT id, national_id, first_name, last_name, email, created_at FROM applicants ORDER BY id DESC LIMIT 100')
     res.json(rows)
   } catch (err) { console.error(err); res.status(500).json({ error: 'DB error' }) }
+})
+
+// Obtener un solicitante por id (para Mi Cuenta)
+router.get('/:id', async (req, res) => {
+  const id = Number(req.params.id)
+  if (!Number.isFinite(id) || id <= 0) return res.status(400).json({ error: 'BAD_ID' })
+  try {
+    await ensureApplicants()
+    const { rows } = await pool.query(
+      `SELECT id, national_id, first_name, last_name, email, phone,
+              date_of_birth, nationality, address, income_source, monthly_income, created_at
+         FROM applicants
+        WHERE id = $1`,
+      [id]
+    )
+    if (!rows.length) return res.status(404).json({ error: 'NOT_FOUND' })
+    res.json(rows[0])
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'DB error' })
+  }
 })
 
 module.exports = router

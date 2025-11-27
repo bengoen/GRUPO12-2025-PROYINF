@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="contract-page">
+    <div class="container" id="contract-root" data-loan-id="<%= loan.id %>">
+      <a href="/requests/<%= loan.id %>" class="btn btn-link p-0 mb-3" style="text-decoration:none;">&larr; Volver al detalle de la solicitud</a>
+
+      <h1 class="mb-3">Contrato de Pr&eacute;stamo N&deg; <%= loan.id %></h1>
+
+      <div class="contract-layout">
+        <section class="contract-document">
+          <h2>Documento Legal del Pr&eacute;stamo</h2>
+          <p class="muted mb-2">
+            Fecha de emisi&oacute;n: <strong><%= new Date(loan.created_at).toLocaleDateString('es-CL') %></strong>
+          </p>
+
+          <p>
+            Entre <strong>Tu Pr&eacute;stamo Digital</strong>, en adelante &ldquo;la Instituci&oacute;n&rdquo;, y
+            <strong><%= (loan.first_name || '') + ' ' + (loan.last_name || '') %></strong>,
+            RUT/RUN <strong><%= loan.national_id || 'N/D' %></strong>,
+            correo electr&oacute;nico <strong><%= loan.email || 'N/D' %></strong>, en adelante &ldquo;el Cliente&rdquo;,
+            se celebra el siguiente contrato de pr&eacute;stamo de dinero.
+          </p>
+
+          <h3>Cl&aacute;usula Primera: Monto y plazo</h3>
+          <p>
+            La Instituci&oacute;n otorga al Cliente un pr&eacute;stamo por la suma de
+            <strong><%= formatCLP(loan.amount) %></strong> (monto solicitado),
+            a un plazo de <strong><%= loan.term_months %></strong> meses,
+            pagadero en cuotas mensuales y sucesivas.
+          </p>
+
+          <h3>Cl&aacute;usula Segunda: Inter&eacute;s y cargos</h3>
+          <p>
+            El pr&eacute;stamo devenga un inter&eacute;s pactado equivalente a una tasa mensual aproximada de
+            <strong><%= (Number(loan.monthly_rate || 0) * 100).toFixed(2) %>%</strong>.
+            El Cliente autoriza adem&aacute;s el cobro de una comisi&oacute;n de apertura financiada y cargos mensuales
+            asociados a seguro de desgravamen y gastos de administraci&oacute;n, los que se encuentran incorporados
+            en el valor de la cuota.
+          </p>
+
+          <h3>Cl&aacute;usula Tercera: Cuotas y forma de pago</h3>
+          <p>
+            El Cliente se obliga a pagar <strong><%= loan.term_months %></strong> cuotas mensuales estimadas de
+            <strong><%= formatCLP(loan.monthly_payment) %></strong> cada una, que incluyen capital, intereses,
+            seguros y cargos asociados. El vencimiento de la primera cuota se producir&aacute; 30 d&iacute;as
+            despu&eacute;s de la fecha de desembolso y las siguientes en el mismo d&iacute;a de los meses sucesivos.
+          </p>
+
+          <h3>Cl&aacute;usula Cuarta: Vencimientos referenciales</h3>
+          <p>Los siguientes vencimientos y montos son referenciales seg&uacute;n la simulaci&oacute;n registrada:</p>
+          <table class="table table-sm contract-installments-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vencimiento</th>
+                <th>Pago estimado</th>
+                <th>Capital</th>
+                <th>Inter&eacute;s</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% firstInstallments.forEach(function(row) { %>
+                <tr>
+                  <td><%= row.installment %></td>
+                  <td><%= new Date(row.dueDate).toLocaleDateString('es-CL') %></td>
+                  <td><%= formatCLP(row.totalPayment) %></td>
+                  <td><%= formatCLP(row.amortization) %></td>
+                  <td><%= formatCLP(row.interest) %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+
+          <h3>Cl&aacute;usula Quinta: Declaraci&oacute;n de conformidad</h3>
+          <p>
+            El Cliente declara haber le&iacute;do &iacute;ntegramente el presente contrato de pr&eacute;stamo,
+            comprender sus t&eacute;rminos y estar de acuerdo con las condiciones, montos, plazos, tasas y cargos
+            detallados, autorizando su firma digital para todos los efectos legales.
+          </p>
+        </section>
+
+        <aside class="contract-summary">
+          <h2>Resumen del Pr&eacute;stamo</h2>
+          <ul class="summary-list">
+            <li>
+              <span>Monto solicitado:</span>
+              <strong><%= formatCLP(loan.amount) %></strong>
+            </li>
+            <li>
+              <span>Plazo:</span>
+              <strong><%= loan.term_months %> meses</strong>
+            </li>
+            <li>
+              <span>Cuota mensual estimada:</span>
+              <strong><%= formatCLP(loan.monthly_payment) %></strong>
+            </li>
+            <li>
+              <span>Total estimado a pagar:</span>
+              <strong><%= formatCLP(summary.totalPaid) %></strong>
+            </li>
+          </ul>
+          <p class="muted">
+            Los montos definitivos pueden variar levemente producto del redondeo, seguros y cargos vigentes al
+            momento del desembolso.
+          </p>
+        </aside>
+      </div>
+
+      <section class="contract-steps">
+        <h2>Firma Digital del Contrato</h2>
+        <ol class="contract-steps-list">
+          <li><strong>Paso 1:</strong> Revisa con detalle el contrato anterior.</li>
+          <li><strong>Paso 2:</strong> Confirma que est&aacute;s de acuerdo e inicia la firma digital.</li>
+          <li><strong>Paso 3:</strong> Ingresa el c&oacute;digo de verificaci&oacute;n para completar la firma.</li>
+        </ol>
+
+        <div id="contract-sign-state" class="mt-2 mb-3 text-muted">
+          Listo para iniciar el proceso de firma digital.
+        </div>
+
+        <button id="btn-start-sign" class="btn btn-primary btn-large">
+          Estoy de acuerdo, continuar a firma digital
+        </button>
+
+        <div id="contract-code-step" class="mt-3" style="display:none;">
+          <p>
+            Hemos enviado un c&oacute;digo de verificaci&oacute;n a tu correo registrado
+            (simulado). Ingresa <strong>123456</strong> para completar la firma.
+          </p>
+          <div class="input-inline">
+            <input id="sign-code" type="text" class="form-control" placeholder="C&oacute;digo de firma" />
+            <button id="btn-confirm-sign" class="btn btn-success">
+              Confirmar firma digital
+            </button>
+          </div>
+        </div>
+
+        <p id="contract-sign-result" class="mt-3"></p>
+      </section>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    (function () {
+      const root = document.getElementById('contract-root');
+      if (!root) return;
+      const loanId = Number(root.dataset.loanId);
+      const stateEl = document.getElementById('contract-sign-state');
+      const resultEl = document.getElementById('contract-sign-result');
+      const codeStepEl = document.getElementById('contract-code-step');
+      const btnStart = document.getElementById('btn-start-sign');
+      const btnConfirm = document.getElementById('btn-confirm-sign');
+
+      // Registrar que el cliente revisó el contrato
+      async function markReviewed() {
+        try {
+          await fetch(`/api/loan-requests/${loanId}/contract/review`, { method: 'POST' });
+        } catch (e) {
+          console.warn('No se pudo registrar la revisión del contrato', e);
+        }
+      }
+
+      async function startSign() {
+        if (!Number.isFinite(loanId)) return;
+        btnStart.disabled = true;
+        stateEl.textContent = 'Enviando contrato al sistema de firma digital...';
+        resultEl.textContent = '';
+
+        try {
+          const res = await fetch(`/api/loan-requests/${loanId}/contract/start-sign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            throw new Error((data && data.error) || 'Error al iniciar la firma');
+          }
+          stateEl.textContent = data.message || 'Contrato enviado. Continua con la verificación de identidad.';
+          codeStepEl.style.display = 'block';
+        } catch (err) {
+          console.error(err);
+          stateEl.textContent = 'No se pudo iniciar la firma digital. Int&eacute;ntalo nuevamente m&aacute;s tarde.';
+          btnStart.disabled = false;
+        }
+      }
+
+      async function confirmSign() {
+        if (!Number.isFinite(loanId)) return;
+        const codeInput = document.getElementById('sign-code');
+        const code = (codeInput && codeInput.value || '').trim();
+        if (!code) {
+          resultEl.textContent = 'Por favor, ingresa el c&oacute;digo de firma (puedes usar 123456).';
+          return;
+        }
+
+        resultEl.textContent = 'Confirmando firma en el sistema digital...';
+        btnConfirm.disabled = true;
+
+        try {
+          const res = await fetch(`/api/loan-requests/${loanId}/contract/confirm-sign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data.ok) {
+            throw new Error((data && data.error) || 'Error al confirmar la firma');
+          }
+          resultEl.textContent = data.message ||
+            'Contrato firmado correctamente. Tu pr&eacute;stamo ha pasado a estado ACTIVO y el desembolso est&aacute; en curso.';
+          stateEl.textContent = 'Firma digital completada.';
+        } catch (err) {
+          console.error(err);
+          resultEl.textContent = 'No se pudo completar la firma digital. Revisa el c&oacute;digo e int&eacute;ntalo nuevamente.';
+          btnConfirm.disabled = false;
+        }
+      }
+
+      if (btnStart) btnStart.addEventListener('click', startSign);
+      if (btnConfirm) btnConfirm.addEventListener('click', confirmSign);
+
+      markReviewed();
+    })();
+  </script>
+</body>
+</html>
+

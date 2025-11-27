@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="loans-page">
+    <div class="container">
+      <h1 class="mb-3">Mis pr&eacute;stamos activos</h1>
+      <p class="muted mb-3">
+        Aqu&iacute; ver&aacute;s los pr&eacute;stamos que ya est&aacute;n activos y sus cuotas asociadas.
+      </p>
+
+      <div id="loans-list"></div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    (function () {
+      const listEl = document.getElementById('loans-list');
+
+      function formatCLP(num) {
+        try {
+          return new Intl.NumberFormat('es-CL', {
+            style: 'currency',
+            currency: 'CLP',
+            maximumFractionDigits: 0
+          }).format(Number(num || 0));
+        } catch {
+          const n = Math.round(Number(num || 0));
+          return (isNaN(n) ? 0 : n).toLocaleString('es-CL') + ' CLP';
+        }
+      }
+
+      function humanStatus(code) {
+        switch (code) {
+          case 'PENDING_EVAL': return 'Pendiente de evaluación';
+          case 'APPROVED': return 'Aprobado';
+          case 'REJECTED': return 'Rechazado';
+          case 'CONTRACT_PENDING': return 'Falta firmar contrato';
+          case 'CONTRACT_SIGNED': return 'Contrato firmado';
+          case 'ACTIVE': return 'Activo';
+          case 'DISBURSED': return 'Desembolsado';
+          default: return code || '';
+        }
+      }
+
+      function getApplicantIdFromStorage() {
+        try {
+          const raw = localStorage.getItem('applicantId');
+          const n = raw ? Number(raw) : NaN;
+          if (Number.isFinite(n) && n > 0) return n;
+        } catch (_) {}
+        return null;
+      }
+
+      async function loadLoansForCurrentUser() {
+        if (!listEl) return;
+        const applicantId = getApplicantIdFromStorage();
+
+        if (!applicantId) {
+          listEl.innerHTML = '<p>Debes iniciar sesi&oacute;n para ver tus pr&eacute;stamos activos. Ve a <a href="/login">Mi Cuenta</a>.</p>';
+          return;
+        }
+
+        listEl.innerHTML = '<p>Cargando pr&eacute;stamos activos...</p>';
+
+        try {
+          const res = await fetch(`/api/loan-requests?applicantId=${applicantId}`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          const requests = Array.isArray(data) ? data : [];
+
+          const active = requests.filter(r =>
+            r.status === 'ACTIVE' ||
+            r.status === 'DISBURSED' ||
+            r.status === 'CONTRACT_SIGNED'
+          );
+
+          if (!active.length) {
+            listEl.innerHTML = '<p>(No se encontraron pr&eacute;stamos activos para tu cuenta.)</p>';
+            return;
+          }
+
+          listEl.innerHTML = active.map(r => {
+            const badgeClass = r.status === 'ACTIVE' ? 'bg-success' : 'bg-primary';
+            return `
+              <div class="card loan-card mb-3" data-loan-id="${r.id}">
+                <div class="loan-card-header">
+                  <div>
+                    <strong>Pr&eacute;stamo #${r.id}</strong><br/>
+                    <small>Monto solicitado: ${formatCLP(r.amount)}</small>
+                  </div>
+                  <div>
+                    <span class="badge ${badgeClass}">${humanStatus(r.status)}</span>
+                  </div>
+                </div>
+                <div class="loan-card-body">
+                  <p class="mb-1">
+                    <span id="next-${r.id}">Pr&oacute;ximo pago: calculando...</span><br/>
+                    <span id="progress-${r.id}" class="muted"></span>
+                  </p>
+                  <button class="btn btn-link p-0" onclick="toggleInstallments(${r.id})">
+                    Ver detalle
+                  </button>
+                  <div id="installments-${r.id}" class="installments-box" style="display:none;"></div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // cargar resumen de cuotas (próximo pago / progreso) para cada préstamo
+          active.forEach(r => loadInstallmentsSummary(r.id));
+        } catch (err) {
+          console.error(err);
+          listEl.innerHTML = '<p style="color:#b00020;">No se pudieron cargar los pr&eacute;stamos.</p>';
+        }
+      }
+
+      async function loadInstallmentsSummary(id) {
+        const nextEl = document.getElementById(`next-${id}`);
+        const progEl = document.getElementById(`progress-${id}`);
+        if (!nextEl || !progEl) return;
+
+        try {
+          const res = await fetch(`/api/loan-requests/${id}/installments`);
+          const data = await res.json();
+          if (!res.ok || !data || !Array.isArray(data.schedule) || !data.schedule.length) {
+            throw new Error('Respuesta no v&aacute;lida');
+          }
+
+          const rows = data.schedule;
+          const total = rows.length;
+          const first = rows[0];
+          const nextDate = first ? new Date(first.dueDate).toLocaleDateString('es-CL') : '―';
+          const nextAmount = first ? formatCLP(first.totalPayment) : '―';
+
+          nextEl.textContent = `Pr&oacute;ximo pago: ${nextAmount} el ${nextDate}`;
+          progEl.textContent = `Cuota 1 de ${total}`;
+        } catch (err) {
+          console.error(err);
+          nextEl.textContent = 'Pr&oacute;ximo pago: no disponible';
+          progEl.textContent = '';
+        }
+      }
+
+      async function loadInstallmentsTable(id) {
+        const box = document.getElementById(`installments-${id}`);
+        if (!box) return;
+        box.innerHTML = '<p class="muted">Cargando cuadro de cuotas...</p>';
+
+        try {
+          const res = await fetch(`/api/loan-requests/${id}/installments`);
+          const data = await res.json();
+          if (!res.ok || !data || !Array.isArray(data.schedule)) {
+            throw new Error('Respuesta no v&aacute;lida');
+          }
+
+          const rows = data.schedule;
+          const header = `
+            <p class="muted mb-1">
+              Total estimado a pagar: <strong>${formatCLP(data.summary && data.summary.totalPaid)}</strong>
+            </p>
+          `;
+
+          const table = `
+            <div class="amort-table-wrapper">
+              <table class="amort-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Vencimiento</th>
+                    <th>Capital</th>
+                    <th>Inter&eacute;s</th>
+                    <th>Total a pagar</th>
+                    <th>Saldo restante</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map(r => `
+                    <tr>
+                      <td>${r.installment}</td>
+                      <td>${new Date(r.dueDate).toLocaleDateString('es-CL')}</td>
+                      <td>${formatCLP(r.amortization)}</td>
+                      <td>${formatCLP(r.interest)}</td>
+                      <td>${formatCLP(r.totalPayment)}</td>
+                      <td>${formatCLP(r.remainingBalance)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+
+          box.innerHTML = header + table;
+        } catch (err) {
+          console.error(err);
+          box.innerHTML = '<p style="color:#b00020;">No se pudo cargar el detalle de cuotas.</p>';
+        }
+      }
+
+      window.toggleInstallments = function (id) {
+        const box = document.getElementById(`installments-${id}`);
+        if (!box) return;
+        const isHidden = box.style.display === 'none' || !box.style.display;
+        if (isHidden) {
+          box.style.display = 'block';
+          loadInstallmentsTable(id);
+        } else {
+          box.style.display = 'none';
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', loadLoansForCurrentUser);
+    })();
+  </script>
+</body>
+</html>

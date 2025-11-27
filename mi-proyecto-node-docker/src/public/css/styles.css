@@ -285,6 +285,74 @@ ul {
     align-items: center;
 }
 
+/* Contrato y pr��stamos activos (HU003) */
+.contract-page, .loans-page {
+    padding: 40px 0 60px;
+}
+
+.contract-layout {
+    display: grid;
+    grid-template-columns: 2fr 1.1fr;
+    gap: 24px;
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+.contract-document, .contract-summary, .contract-steps {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-color);
+}
+
+.contract-document h2,
+.contract-summary h2,
+.contract-steps h2 {
+    margin-bottom: 12px;
+}
+
+.contract-document h3 {
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.contract-installments-table th,
+.contract-installments-table td {
+    text-align: right;
+}
+.contract-installments-table th:first-child,
+.contract-installments-table td:first-child {
+    text-align: center;
+}
+
+.contract-steps-list {
+    margin: 0 0 10px 18px;
+    padding: 0;
+}
+.contract-steps-list li {
+    margin-bottom: 4px;
+}
+
+.loan-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--border-color);
+}
+.loan-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+.loan-card-body {
+    padding: 12px 16px 16px;
+}
+.installments-box {
+    margin-top: 10px;
+}
+
 /* Simulador de préstamo (React) */
 .simulator-card { width: 100%; }
 .simulator-grid {

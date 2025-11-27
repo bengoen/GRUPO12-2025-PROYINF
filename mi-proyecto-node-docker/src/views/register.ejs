@@ -14,10 +14,14 @@
     .flash { margin:8px 0 16px; color:#0a7c2e }
   </style>
   <script>
-    // Si el servidor entrega applicantId, persistimos para enlazar futuras simulaciones
+    // Si el servidor entrega applicantId/nationalId, los persistimos para enlazar futuras simulaciones y "Mi Cuenta"
     document.addEventListener('DOMContentLoaded', function(){
-      var id = '<%- typeof applicantId !== "undefined" && applicantId ? JSON.stringify(applicantId) : "null" %>';
-      if(id){ try { localStorage.setItem('applicantId', String(id)); } catch(e){} }
+      var id = <%- typeof applicantId !== "undefined" && applicantId ? JSON.stringify(applicantId) : "null" %>;
+      var rut = <%- typeof nationalId !== "undefined" && nationalId ? JSON.stringify(nationalId) : "null" %>;
+      try {
+        if (id) localStorage.setItem('applicantId', String(id));
+        if (rut) localStorage.setItem('nationalId', String(rut));
+      } catch(e) {}
     });
   </script>
 </head>
@@ -25,7 +29,7 @@
   <%- include('partials/header') %>
   <section class="reg-wrap">
     <div class="container">
-      <h2 class="mb-3">Registro de Solicitante</h2>
+      <h2 class="mb-3">Registro de solicitante</h2>
       <% if (typeof flash === 'string' && flash) { %>
         <p class="flash"><%= flash %></p>
       <% } %>
@@ -35,27 +39,29 @@
           <div class="grid">
             <div><label>Nombre</label><input name="first_name" required></div>
             <div><label>Apellido</label><input name="last_name" required></div>
-            <div><label>RUT / Cédula (sin puntos)</label><input name="national_id" required></div>
+            <div><label>RUT / C&eacute;dula (sin puntos)</label><input name="national_id" required></div>
             <div><label>Fecha de nacimiento</label><input type="date" name="date_of_birth" required></div>
             <div><label>Nacionalidad</label><input name="nationality"></div>
             <div><label>Email</label><input type="email" name="email" required></div>
-            <div><label>Teléfono</label><input name="phone"></div>
+            <div><label>Tel&eacute;fono</label><input name="phone"></div>
+            <div><label>Contrase&ntilde;a</label><input type="password" name="password" required></div>
+            <div><label>Repetir contrase&ntilde;a</label><input type="password" name="password_confirm" required></div>
           </div>
         </div>
 
         <div class="reg-card" style="margin-top:16px">
           <h4>Domicilio</h4>
           <div class="grid">
-            <div style="grid-column: 1/-1"><label>Dirección</label><input name="address" required></div>
+            <div style="grid-column: 1/-1"><label>Direcci&oacute;n</label><input name="address" required></div>
             <div><label>Tipo comprobante</label>
               <select name="address_proof_type">
-                <option value="">Seleccionar…</option>
+                <option value="">Seleccionar...</option>
                 <option>Boleta servicio</option>
                 <option>Contrato arriendo</option>
                 <option>Certificado residencia</option>
               </select>
             </div>
-            <div><label>Referencia (número/URL)</label><input name="address_proof_ref"></div>
+            <div><label>Referencia (n&uacute;mero/URL)</label><input name="address_proof_ref"></div>
           </div>
         </div>
 
@@ -65,7 +71,7 @@
             <div>
               <label>Fuente de ingresos</label>
               <select name="income_source">
-                <option value="">Seleccionar…</option>
+                <option value="">Seleccionar...</option>
                 <option>Dependiente</option>
                 <option>Independiente</option>
                 <option>Honorarios</option>
@@ -74,8 +80,8 @@
               </select>
             </div>
             <div><label>Ingreso mensual (CLP)</label><input type="number" step="1000" name="monthly_income"></div>
-            <div><label>Tipo comprobante</label><input name="income_proof_type" placeholder="Liquidación, boleta, cert. alumno, etc."></div>
-            <div><label>Referencia (número/URL)</label><input name="income_proof_ref"></div>
+            <div><label>Tipo comprobante</label><input name="income_proof_type" placeholder="Liquidaci&oacute;n, boleta, cert. alumno, etc."></div>
+            <div><label>Referencia (n&uacute;mero/URL)</label><input name="income_proof_ref"></div>
             <div style="grid-column: 1/-1"><label>Historial financiero (opcional)</label><textarea name="financial_history_note" rows="3"></textarea></div>
           </div>
         </div>

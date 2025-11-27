@@ -182,3 +182,125 @@ Este hito implementa el monitoreo del estado de las solicitudes de préstamo, in
 #### Notas
   - El worker se ejecuta cada 5 segundos y maneja hasta 20 notificaciones pendientes por ciclo.
   - El flujo es completamente autónomo y extensible para nuevos canales (SMS, push, etc).
+
+
+## HU003 – Gestionar la Aprobación y Firma del Préstamo (Contrato + Firma Digital + Préstamos Activos)
+
+Esta HU implementa el flujo completo de formalización del préstamo: desde la revisión del contrato y la firma digital simulada, hasta la visualización de los préstamos activos y sus cuotas.
+
+## ¿Qué se agregó?
+
+- **Contrato web del préstamo**
+  - Vista `GET /requests/:id/contract` donde el cliente puede revisar un contrato generado en base a la solicitud de préstamo.
+  - El contrato incluye:
+    - Datos del cliente (nombre, RUT/RUN, email) asociados al `applicantId` de la solicitud.
+    - Monto solicitado, plazo en meses, tasa mensual estimada y cuota mensual.
+    - Un cuadro referencial con las primeras cuotas, mostrando capital, interés, pago total y fecha estimada de vencimiento.
+  - El cálculo del cuadro de cuotas se realiza en `src/utils/installments.js`, reutilizando la misma lógica de simulación (comisión de apertura financiada, seguro mensual y cargo fijo).
+
+- **Proceso de firma digital (simulado)**
+  - Desde el detalle de una solicitud (`GET /requests/:id`) o el listado (`GET /requests`) se habilita el botón **“Revisar y firmar contrato”** cuando el estado del préstamo es `APPROVED` o `CONTRACT_PENDING`.
+  - En la vista de contrato (`/requests/:id/contract`):
+    - El cliente revisa el texto legal y el resumen del préstamo.
+    - Al presionar **“Estoy de acuerdo, continuar a firma digital”**, el front llama a  
+      `POST /api/loan-requests/:id/contract/start-sign`, que:
+      - Registra un evento `CONTRACT_SENT_TO_SIGNATURE` en la tabla de eventos.
+      - Cambia el estado a `CONTRACT_PENDING` (si estaba `APPROVED`).
+    - Luego se solicita un código de verificación (simulado, por ejemplo `123456`); al confirmarlo se llama a  
+      `POST /api/loan-requests/:id/contract/confirm-sign`, que:
+      - Registra los eventos `CONTRACT_SIGNED` y `DISBURSEMENT_STARTED`.
+      - Actualiza el estado del préstamo a `ACTIVE`, lo que representa un contrato firmado y el inicio del desembolso.
+
+- **Préstamos activos y cuotas**
+  - Nueva vista `GET /my-loans` que lista los préstamos activos del cliente:
+    - Se obtiene el `applicantId` del usuario actual desde `localStorage` (configurado en HU004 al registrarse/iniciar sesión).
+    - Se consume `GET /api/loan-requests?applicantId=<id>` y se filtran estados `ACTIVE`, `DISBURSED` y `CONTRACT_SIGNED`.
+  - Por cada préstamo activo se muestra una tarjeta (card) que incluye:
+    - Título con `Préstamo #ID` y monto original solicitado.
+    - Estado legible (Activo, Desembolsado, Contrato firmado) con un *badge* de color (verde para activo, azul para estados finalizados).
+    - Próximo pago y progreso:
+      - Se consulta `GET /api/loan-requests/:id/installments` para obtener el cuadro de cuotas.
+      - Se calcula el “próximo pago” como la primera cuota estimada y se muestra como `Próximo pago: $monto el fecha`.
+      - Se indica el progreso como texto del estilo `Cuota 1 de N`.
+    - Botón **“Ver detalle”** que expande un acordeón con la tabla de amortización, mostrando por cada cuota:
+      - Número de cuota.
+      - Fecha de vencimiento estimada.
+      - Capital.
+      - Interés.
+      - Total a pagar.
+      - Saldo restante.
+
+## Endpoints y vistas clave
+
+- **Vistas**
+  - `GET /requests/:id`  
+    - Muestra un resumen de la solicitud (estado legible, fecha de última actualización, monto, plazo y cuota) y botones para:
+      - “Revisar y firmar contrato” (lleva a `/requests/:id/contract`).
+      - “Ver préstamos activos” (lleva a `/my-loans` usando el `applicantId` actual).
+  - `GET /requests/:id/contract`  
+    - Muestra el contrato legal con resumen del préstamo y guía al usuario por el proceso de firma digital simulada.
+  - `GET /my-loans`  
+    - Lista las tarjetas de préstamos activos para el solicitante logueado y permite ver el detalle de las cuotas.
+
+- **API (implementadas en `src/routes/loanStatus.js`)**
+  - `GET /api/loan-requests/:id/status`  
+    - Devuelve `status`, `updated_at` y un arreglo `next_actions` con acciones siguientes sugeridas (por ejemplo `REVIEW_CONTRACT`, `VIEW_INSTALLMENTS`).
+  - `GET /api/loan-requests/:id/installments`  
+    - Calcula el cuadro de cuotas (capital, interés, seguro, cargo, pago total, saldo restante) a partir de los datos del préstamo y devuelve también un resumen de totales.
+  - `POST /api/loan-requests/:id/contract/review`  
+    - Registra un evento `CONTRACT_REVIEWED` para auditar que el cliente revisó el contrato.
+  - `POST /api/loan-requests/:id/contract/start-sign`  
+    - Simula el envío del contrato al proveedor de firma digital y cambia el estado a `CONTRACT_PENDING` cuando corresponde.
+  - `POST /api/loan-requests/:id/contract/confirm-sign`  
+    - Simula la confirmación de firma digital, registra los eventos de firma y desembolso, y actualiza el estado a `ACTIVE`.
+
+## Archivos modificados/añadidos
+
+- Backend
+  - `src/utils/installments.js` → lógica compartida de cálculo de cuotas (usada en el contrato y en “Mis préstamos activos”).  
+  - `src/routes/loanStatus.js` → endpoints `status`, `installments` y `contract/*` para HU003.  
+  - `index.js` → rutas de vistas `/requests/:id/contract` y `/my-loans`.
+
+- Frontend
+  - `src/views/contract.ejs` → contrato web con resumen del préstamo y pasos de firma digital simulada.  
+  - `src/views/my_loans.ejs` → tarjetas de préstamos activos del usuario actual, con resumen, próximo pago, progreso y tabla de amortización desplegable.  
+  - `src/views/request_detail.ejs` → resumen de la solicitud con estado legible y navegación hacia contrato y préstamos activos.  
+  - `src/views/partials/header.ejs` → enlace “Mis Préstamos Activos” en la barra de navegación.
+
+## Cómo usar HU003 desde la página
+
+1. Simular y crear una solicitud (HU001) desde `/simulator` o la sección “Simula tu préstamo ideal” en la home.  
+2. Registrar o iniciar sesión (HU004) para asociar la simulación a un solicitante (`applicantId`).  
+3. Aprobar la solicitud (HU002) cambiando su estado a `APPROVED` (vía API o botones internos).  
+4. Entrar a **“Mis Solicitudes”** (`/requests`), abrir la solicitud (`/requests/:id`) y usar el botón **“Revisar y firmar contrato”** para ir a `/requests/:id/contract`.  
+5. Revisar el contrato, continuar a firma digital y confirmar con el código simulado para que el préstamo pase a estado `ACTIVE`.  
+6. Ir a **“Mis Préstamos Activos”** (`/my-loans`) para ver las tarjetas de los préstamos activos y, si se desea, desplegar el detalle de cuotas mediante el botón **“Ver detalle”**.
+
+
+
+## HU004 – Registro e Inicio de Sesión (Register/Login + Mi Cuenta)
+
+Esta HU agrega un flujo de autenticación básico para solicitantes, con registro usando RUT y contraseña, una sección **“Mi Cuenta”** y la integración de identidad.
+
+### ¿Qué se implementó?
+
+- **Contraseñas seguras:**  
+  - Se usa `bcryptjs` para hashear contraseñas en la tabla `applicants`.
+
+- **Registro (`/register`):**
+  - Formulario con contraseña y validación.
+  - Guarda `applicantId` y `nationalId` en `localStorage` para auto-login.
+
+- **Inicio de sesión y Mi Cuenta (`/login`):**
+  - **Login:** Valida RUT y contraseña contra el hash.
+  - **Mi Cuenta:** Si ya hay sesión (`localStorage`), muestra el perfil del usuario y botón de "Cerrar sesión".
+
+- **Integración con Solicitudes y Préstamos:**
+  - Las vistas `requests.ejs` y `my_loans.ejs` ahora detectan automáticamente el usuario logueado (desde `localStorage`) para filtrar la información y mostrar solo lo que corresponde a ese usuario.
+
+### Resumen del flujo HU004
+
+1. El usuario se registra en `/register` → queda logueado.
+2. Entra a **“Mi Cuenta”** (`/login`) → ve sus datos.
+3. En **“Mis Solicitudes”** y **“Mis Préstamos”** ve solo su información privada.
+```

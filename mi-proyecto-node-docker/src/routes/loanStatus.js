@@ -1,5 +1,6 @@
 // src/routes/loanStatus.js
 const express = require('express');
+const { buildInstallmentSchedule, summarizeSchedule } = require('../utils/installments');
 const router = express.Router();
 
 module.exports = (pool) => {
@@ -39,13 +40,13 @@ module.exports = (pool) => {
       const { rows } = await pool.query(
         `SELECT id, status, updated_at,
            CASE status
-             WHEN 'PENDING_EVAL'    THEN ARRAY['WAIT']
-             WHEN 'APPROVED'        THEN ARRAY['REVIEW_CONTRACT']
-             WHEN 'REJECTED'        THEN ARRAY[]::text[]
-             WHEN 'CONTRACT_PENDING' THEN ARRAY['SIGN_CONTRACT']
-             WHEN 'CONTRACT_SIGNED' THEN ARRAY['REQUEST_DISBURSEMENT']
-             WHEN 'ACTIVE'          THEN ARRAY['REQUEST_DISBURSEMENT']
-             WHEN 'DISBURSED'       THEN ARRAY['VIEW_INSTALLMENTS']
+             WHEN 'PENDING_EVAL'     THEN ARRAY['WAIT']
+             WHEN 'APPROVED'         THEN ARRAY['REVIEW_CONTRACT']
+             WHEN 'REJECTED'         THEN ARRAY[]::text[]
+             WHEN 'CONTRACT_PENDING' THEN ARRAY['REVIEW_CONTRACT']
+             WHEN 'CONTRACT_SIGNED'  THEN ARRAY['VIEW_INSTALLMENTS']
+             WHEN 'ACTIVE'           THEN ARRAY['VIEW_INSTALLMENTS']
+             WHEN 'DISBURSED'        THEN ARRAY['VIEW_INSTALLMENTS']
            END AS next_actions
          FROM loan_requests
         WHERE id = $1`,
@@ -78,6 +79,34 @@ module.exports = (pool) => {
       return res.json(rows);
     } catch (err) {
       console.error('[GET /loan-requests/:id/timeline] DB_ERROR:', err);
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  /**
+   * GET /api/loan-requests/:id/installments
+   * Devuelve cuadro de cuotas y resumen
+   */
+  router.get('/loan-requests/:id/installments', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'BAD_REQUEST' });
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT id, amount, term_months, monthly_rate, monthly_payment, status, created_at
+           FROM loan_requests
+          WHERE id = $1`,
+        [id]
+      );
+      if (!rows.length) return res.status(404).json({ error: 'NOT_FOUND' });
+
+      const loan = rows[0];
+      const schedule = buildInstallmentSchedule(loan);
+      const summary = summarizeSchedule(schedule);
+
+      return res.json({ loan, schedule, summary });
+    } catch (err) {
+      console.error('[GET /loan-requests/:id/installments] DB_ERROR:', err);
       return res.status(500).json({ error: 'DB_ERROR' });
     }
   });
@@ -128,6 +157,144 @@ module.exports = (pool) => {
     } catch (err) {
       await pool.query('ROLLBACK');
       console.error('[PATCH /loan-requests/:id/status] DB_ERROR:', err);
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  /**
+   * POST /api/loan-requests/:id/contract/review
+   * Marca que el cliente revisó el contrato (evento informativo)
+   */
+  router.post('/loan-requests/:id/contract/review', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'BAD_REQUEST' });
+
+    try {
+      const { rowCount } = await pool.query(
+        'INSERT INTO loan_request_events(loan_request_id, event_type, event_data) VALUES ($1, $2, $3)',
+        [id, 'CONTRACT_REVIEWED', JSON.stringify({ source: 'WEB', userAgent: req.headers['user-agent'] || null })]
+      );
+      if (!rowCount) return res.status(404).json({ error: 'NOT_FOUND' });
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error('[POST /loan-requests/:id/contract/review] DB_ERROR:', err);
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  /**
+   * POST /api/loan-requests/:id/contract/start-sign
+   * Simula envío del contrato al sistema de firma digital y pasa a CONTRACT_PENDING
+   */
+  router.post('/loan-requests/:id/contract/start-sign', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'BAD_REQUEST' });
+
+    try {
+      await pool.query('BEGIN');
+
+      const current = await pool.query(
+        'SELECT status FROM loan_requests WHERE id = $1',
+        [id]
+      );
+      if (!current.rows.length) {
+        await pool.query('ROLLBACK');
+        return res.status(404).json({ error: 'NOT_FOUND' });
+      }
+
+      const currentStatus = current.rows[0].status;
+      const allowedStart = ['APPROVED', 'CONTRACT_PENDING', 'ACTIVE'];
+      if (!allowedStart.includes(currentStatus)) {
+        await pool.query('ROLLBACK');
+        return res.status(400).json({ error: 'INVALID_STATE', currentStatus });
+      }
+
+      await pool.query(
+        'INSERT INTO loan_request_events(loan_request_id, event_type, event_data) VALUES ($1, $2, $3)',
+        [id, 'CONTRACT_SENT_TO_SIGNATURE', JSON.stringify({ provider: 'MockSign', channel: 'WEB' })]
+      );
+
+      if (currentStatus !== 'CONTRACT_PENDING' && currentStatus !== 'ACTIVE') {
+        await pool.query(
+          `UPDATE loan_requests
+              SET status = $1::loan_status
+            WHERE id = $2`,
+          ['CONTRACT_PENDING', id]
+        );
+      }
+
+      await pool.query('COMMIT');
+      return res.json({
+        ok: true,
+        message: 'Contrato enviado al sistema de firma digital (simulado). Sigue los pasos de verificación para completar la firma.'
+      });
+    } catch (err) {
+      await pool.query('ROLLBACK');
+      console.error('[POST /loan-requests/:id/contract/start-sign] DB_ERROR:', err);
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  /**
+   * POST /api/loan-requests/:id/contract/confirm-sign
+   * Simula confirmación de firma digital y activa el préstamo (estado ACTIVE)
+   */
+  router.post('/loan-requests/:id/contract/confirm-sign', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    const code = (req.body && req.body.code ? String(req.body.code).trim() : '') || null;
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'BAD_REQUEST' });
+    if (!code) return res.status(400).json({ error: 'CODE_REQUIRED' });
+
+    try {
+      await pool.query('BEGIN');
+
+      const current = await pool.query(
+        'SELECT status FROM loan_requests WHERE id = $1',
+        [id]
+      );
+      if (!current.rows.length) {
+        await pool.query('ROLLBACK');
+        return res.status(404).json({ error: 'NOT_FOUND' });
+      }
+
+      const currentStatus = current.rows[0].status;
+      if (currentStatus === 'ACTIVE') {
+        await pool.query('ROLLBACK');
+        return res.json({ ok: true, alreadyActive: true });
+      }
+
+      const allowedConfirm = ['APPROVED', 'CONTRACT_PENDING'];
+      if (!allowedConfirm.includes(currentStatus)) {
+        await pool.query('ROLLBACK');
+        return res.status(400).json({ error: 'INVALID_STATE', currentStatus });
+      }
+
+      // Registrar firma exitosa y activación del préstamo
+      await pool.query(
+        'INSERT INTO loan_request_events(loan_request_id, event_type, event_data) VALUES ($1, $2, $3)',
+        [id, 'CONTRACT_SIGNED', JSON.stringify({ provider: 'MockSign', codeUsed: !!code })]
+      );
+      await pool.query(
+        'INSERT INTO loan_request_events(loan_request_id, event_type, event_data) VALUES ($1, $2, $3)',
+        [id, 'DISBURSEMENT_STARTED', JSON.stringify({ mode: 'BANK_TRANSFER' })]
+      );
+
+      await pool.query(
+        `UPDATE loan_requests
+            SET status = $1::loan_status
+          WHERE id = $2`,
+        ['ACTIVE', id]
+      );
+
+      await pool.query('COMMIT');
+      return res.json({
+        ok: true,
+        newStatus: 'ACTIVE',
+        message: 'Contrato firmado digitalmente y préstamo activado. El desembolso se encuentra en curso.'
+      });
+    } catch (err) {
+      await pool.query('ROLLBACK');
+      console.error('[POST /loan-requests/:id/contract/confirm-sign] DB_ERROR:', err);
       return res.status(500).json({ error: 'DB_ERROR' });
     }
   });

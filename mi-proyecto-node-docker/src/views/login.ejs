@@ -9,14 +9,98 @@
 <body>
   <%- include('partials/header') %>
   <section class="simulate-section">
-    <div class="container" style="text-align:center">
-      <h2>Ingreso</h2>
-      <p>La cuenta de usuario estará disponible en un próximo hito.</p>
-      <a href="/register" class="btn btn-primary">Registrarme</a>
-      <a href="/simulator" class="btn btn-secondary" style="margin-left:8px">Ir al simulador</a>
+    <div class="container" style="max-width:900px;">
+      <div class="row">
+        <div class="col-md-5" id="login-form-column">
+          <h2 style="margin-bottom:16px;">Mi cuenta</h2>
+          <% if (typeof flash === 'string' && flash) { %>
+            <p class="flash" style="color:#b00020;"><%= flash %></p>
+          <% } %>
+          <% if (typeof welcome === 'string' && welcome) { %>
+            <p style="color:#0a7c2e;"><%= welcome %></p>
+          <% } %>
+          <form method="POST" action="/login">
+            <div class="mb-3">
+              <label class="form-label">RUT / C&eacute;dula (sin puntos)</label>
+              <input class="form-control" name="national_id" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contrase&ntilde;a</label>
+              <input class="form-control" type="password" name="password" required />
+            </div>
+            <button class="btn btn-primary w-100" type="submit">Iniciar sesi&oacute;n</button>
+          </form>
+          <p style="margin-top:16px;">
+            &iquest;A&uacute;n no tienes cuenta?
+            <a href="/register">Registrarme</a>
+          </p>
+        </div>
+        <div class="col-md-7">
+          <div id="account-summary" class="reg-card" style="display:none;">
+            <h4>Resumen de tu perfil</h4>
+            <p id="account-summary-body" class="muted"></p>
+            <button id="logout-btn" class="btn btn-secondary btn-sm" style="margin-top:10px;">Cerrar sesi&oacute;n</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
   <%- include('partials/footer') %>
+
+  <script>
+    // Persistimos identidad y mostramos datos del solicitante si hay sesión
+    document.addEventListener('DOMContentLoaded', async function () {
+      try {
+        var fromServerId = <%- typeof applicantId !== 'undefined' && applicantId ? JSON.stringify(applicantId) : 'null' %>;
+        var fromServerRut = <%- typeof nationalId !== 'undefined' && nationalId ? JSON.stringify(nationalId) : 'null' %>;
+        if (fromServerId) {
+          localStorage.setItem('applicantId', String(fromServerId));
+        }
+        if (fromServerRut) {
+          localStorage.setItem('nationalId', String(fromServerRut));
+        }
+      } catch (e) {}
+
+      let id = null;
+      try {
+        const stored = localStorage.getItem('applicantId');
+        if (stored) id = Number(stored);
+      } catch (e) {}
+      if (!id || !Number.isFinite(id)) return;
+
+      const summaryBox = document.getElementById('account-summary');
+      const summaryBody = document.getElementById('account-summary-body');
+      const formCol = document.getElementById('login-form-column');
+      if (!summaryBox || !summaryBody) return;
+
+      try {
+        const res = await fetch(`/api/applicants/${id}`);
+        if (!res.ok) return;
+        const u = await res.json();
+        summaryBody.innerHTML = `
+          <b>Nombre:</b> ${u.first_name || ''} ${u.last_name || ''}<br/>
+          <b>RUT:</b> ${u.national_id || ''}<br/>
+          <b>Email:</b> ${u.email || ''}<br/>
+          <b>Tel&eacute;fono:</b> ${u.phone || ''}<br/>
+          <b>Direcci&oacute;n:</b> ${u.address || ''}
+        `;
+        summaryBox.style.display = 'block';
+        if (formCol) formCol.style.display = 'none';
+      } catch (e) {
+        console.error(e);
+      }
+
+      var logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          try {
+            localStorage.removeItem('applicantId');
+            localStorage.removeItem('nationalId');
+          } catch (e) {}
+          window.location.reload();
+        });
+      }
+    });
+  </script>
 </body>
 </html>
-
