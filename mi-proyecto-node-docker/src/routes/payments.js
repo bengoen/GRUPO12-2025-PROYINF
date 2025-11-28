@@ -55,6 +55,36 @@ async function ensureInstallmentPaymentsTable() {
   );
 }
 
+/**
+ * GET /api/payments/loans/:id
+ * Devuelve el historial de pagos registrados para un pr&eacute;stamo.
+ */
+router.get('/loans/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isFinite(id)) {
+    return res.status(400).json({ error: 'BAD_LOAN_ID' });
+  }
+
+  try {
+    await ensureInstallmentPaymentsTable();
+
+    const { rows } = await pool.query(
+      `SELECT id, loan_request_id, installment, amount, currency,
+              status, transbank_token, transbank_buy_order,
+              created_at, updated_at, paid_at
+         FROM loan_installment_payments
+        WHERE loan_request_id = $1
+        ORDER BY created_at DESC, installment ASC`,
+      [id]
+    );
+
+    return res.json(rows);
+  } catch (err) {
+    console.error('[GET /api/payments/loans/:id] ERROR:', err);
+    return res.status(500).json({ error: 'PAYMENTS_HISTORY_ERROR' });
+  }
+});
+
 // Utilidad para determinar la cuota "próxima" impaga
 async function findNextUnpaidInstallment(loanId, loan) {
   const schedule = buildInstallmentSchedule(loan);
@@ -249,4 +279,3 @@ router.post('/commit', express.urlencoded({ extended: true }), handleCommit);
 router.get('/commit', handleCommit);
 
 module.exports = router;
-

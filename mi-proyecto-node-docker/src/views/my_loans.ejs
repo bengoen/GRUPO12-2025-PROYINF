@@ -117,6 +117,10 @@
                     Ver detalle
                   </button>
                   <div id="installments-${r.id}" class="installments-box" style="display:none;"></div>
+                  <div id="payments-${r.id}" class="payments-box mt-2" style="display:none;"></div>
+                  <button class="btn btn-link p-0 mt-1" onclick="togglePayments(${r.id})">
+                    Ver historial de pagos
+                  </button>
                 </div>
               </div>
             `;
@@ -232,6 +236,66 @@
         }
       }
 
+      async function loadPaymentsHistory(id) {
+        const box = document.getElementById(`payments-${id}`);
+        if (!box) return;
+        box.innerHTML = '<p class="muted">Cargando historial de pagos...</p>';
+
+        try {
+          const res = await fetch(`/api/payments/loans/${id}`);
+          const data = await res.json().catch(() => []);
+          if (!res.ok) {
+            throw new Error('HTTP ' + res.status);
+          }
+
+          const payments = Array.isArray(data) ? data : [];
+          if (!payments.length) {
+            box.innerHTML = '<p class="muted">(A&uacute;n no se registran pagos para este pr&eacute;stamo.)</p>';
+            return;
+          }
+
+          const rows = payments.map(p => {
+            const created = p.created_at ? new Date(p.created_at).toLocaleString('es-CL') : '';
+            const paidAt = p.paid_at ? new Date(p.paid_at).toLocaleString('es-CL') : null;
+            const statusLabel = p.status === 'AUTHORIZED' || p.status === 'PAID'
+              ? 'Pagado'
+              : (p.status || '').toUpperCase();
+            return `
+              <tr>
+                <td>${p.installment}</td>
+                <td>${formatCLP(p.amount)}</td>
+                <td>${statusLabel}</td>
+                <td>${created}</td>
+                <td>${paidAt || '-'}</td>
+              </tr>
+            `;
+          }).join('');
+
+          box.innerHTML = `
+            <div class="payments-table-wrapper">
+              <h6 class="mt-2 mb-1">Historial de pagos de cuotas</h6>
+              <table class="amort-table">
+                <thead>
+                  <tr>
+                    <th>Cuota</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th>Creado</th>
+                    <th>Pagado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows}
+                </tbody>
+              </table>
+            </div>
+          `;
+        } catch (err) {
+          console.error(err);
+          box.innerHTML = '<p style="color:#b00020;">No se pudo cargar el historial de pagos.</p>';
+        }
+      }
+
       window.toggleInstallments = function (id) {
         const box = document.getElementById(`installments-${id}`);
         if (!box) return;
@@ -239,6 +303,18 @@
         if (isHidden) {
           box.style.display = 'block';
           loadInstallmentsTable(id);
+        } else {
+          box.style.display = 'none';
+        }
+      };
+
+      window.togglePayments = function (id) {
+        const box = document.getElementById(`payments-${id}`);
+        if (!box) return;
+        const isHidden = box.style.display === 'none' || !box.style.display;
+        if (isHidden) {
+          box.style.display = 'block';
+          loadPaymentsHistory(id);
         } else {
           box.style.display = 'none';
         }
@@ -282,4 +358,3 @@
   </script>
 </body>
 </html>
-
