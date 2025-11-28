@@ -1,6 +1,8 @@
 # Aplicación Node.js con Docker y PostgreSQL
 A continuación, se enlistan las dependencias necesarias, la instalación y algunos tips para navegar a través del repositorio.
 
+**OJO**: La documentación del proyecto y los avances en cada hito se encuentran todos documentados en la [Wiki](https://github.com/bengoen/GRUPO12-2025-PROYINF/wiki)
+
 ## Requisitos Previos
 
 - [Docker](https://docs.docker.com/get-docker/)
