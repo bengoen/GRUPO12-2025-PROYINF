@@ -13,7 +13,8 @@
     <div class="container">
       <h1 class="mb-3">Mis pr&eacute;stamos activos</h1>
       <p class="muted mb-3">
-        Aqu&iacute; ver&aacute;s los pr&eacute;stamos que ya est&aacute;n activos y sus cuotas asociadas.
+        Aqu&iacute; ver&aacute;s los pr&eacute;stamos que ya est&aacute;n activos, sus cuotas asociadas
+        y podr&aacute;s pagar siempre la cuota m&aacute;s pr&oacute;xima.
       </p>
 
       <div id="loans-list"></div>
@@ -41,7 +42,7 @@
 
       function humanStatus(code) {
         switch (code) {
-          case 'PENDING_EVAL': return 'Pendiente de evaluación';
+          case 'PENDING_EVAL': return 'Pendiente de evaluaci&oacute;n';
           case 'APPROVED': return 'Aprobado';
           case 'REJECTED': return 'Rechazado';
           case 'CONTRACT_PENDING': return 'Falta firmar contrato';
@@ -107,6 +108,11 @@
                     <span id="next-${r.id}">Pr&oacute;ximo pago: calculando...</span><br/>
                     <span id="progress-${r.id}" class="muted"></span>
                   </p>
+                  <button class="btn btn-sm btn-primary mb-2 btn-pay-next"
+                          data-loan-id="${r.id}"
+                          onclick="payNextInstallment(${r.id}, this)">
+                    Pagar pr&oacute;xima cuota
+                  </button>
                   <button class="btn btn-link p-0" onclick="toggleInstallments(${r.id})">
                     Ver detalle
                   </button>
@@ -116,7 +122,6 @@
             `;
           }).join('');
 
-          // cargar resumen de cuotas (próximo pago / progreso) para cada préstamo
           active.forEach(r => loadInstallmentsSummary(r.id));
         } catch (err) {
           console.error(err);
@@ -138,12 +143,33 @@
 
           const rows = data.schedule;
           const total = rows.length;
-          const first = rows[0];
-          const nextDate = first ? new Date(first.dueDate).toLocaleDateString('es-CL') : '―';
-          const nextAmount = first ? formatCLP(first.totalPayment) : '―';
+          const paid = Array.isArray(data.paidInstallments) ? data.paidInstallments : [];
+          const paidSet = new Set(paid.map(Number));
 
+          const nextInstallment = data.nextInstallment;
+
+          if (!nextInstallment) {
+            nextEl.textContent = 'Pr&oacute;ximo pago: (sin cuotas pendientes)';
+            progEl.textContent = `Cuotas totales: ${total}, pagadas: ${paidSet.size}`;
+
+            const card = document.querySelector('.loan-card[data-loan-id="' + id + '"]');
+            if (card) {
+              const btn = card.querySelector('.btn-pay-next');
+              if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Pr&eacute;stamo sin cuotas pendientes';
+              }
+            }
+            return;
+          }
+
+          const nextRow = rows.find(r => r.installment === nextInstallment) || rows[0];
+          const nextDate = nextRow ? new Date(nextRow.dueDate).toLocaleDateString('es-CL') : '?';
+          const nextAmount = nextRow ? formatCLP(nextRow.totalPayment) : '?';
+
+          const alreadyPaid = paidSet.size;
           nextEl.textContent = `Pr&oacute;ximo pago: ${nextAmount} el ${nextDate}`;
-          progEl.textContent = `Cuota 1 de ${total}`;
+          progEl.textContent = `Cuota ${nextInstallment} de ${total} (pagadas: ${alreadyPaid})`;
         } catch (err) {
           console.error(err);
           nextEl.textContent = 'Pr&oacute;ximo pago: no disponible';
@@ -218,8 +244,42 @@
         }
       };
 
+      window.payNextInstallment = async function (id, btn) {
+        try {
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Redirigiendo a pago...';
+          }
+          const res = await fetch(`/api/payments/loans/${id}/installments/next`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data || !data.ok || !data.url || !data.token) {
+            const msg = (data && data.error) || ('HTTP ' + res.status);
+            alert('No se pudo iniciar el pago: ' + msg);
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = 'Pagar pr&oacute;xima cuota';
+            }
+            return;
+          }
+
+          const redirectUrl = data.url + '?token_ws=' + encodeURIComponent(data.token);
+          window.location.href = redirectUrl;
+        } catch (err) {
+          console.error(err);
+          alert('Error de red al iniciar el pago.');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Pagar pr&oacute;xima cuota';
+          }
+        }
+      };
+
       document.addEventListener('DOMContentLoaded', loadLoansForCurrentUser);
     })();
   </script>
 </body>
 </html>
+

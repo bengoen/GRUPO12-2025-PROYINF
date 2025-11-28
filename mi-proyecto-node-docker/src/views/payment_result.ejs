@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title %></title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="loans-page">
+    <div class="container">
+      <h1 class="mb-3"><%= title %></h1>
+
+      <% if (success) { %>
+        <p class="alert alert-success">
+          Tu pago de la cuota <strong><%= installment %></strong> del pr&eacute;stamo
+          <strong>#<%= loanId %></strong> por
+          <strong>
+            <%= new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(amount || 0)) %>
+          </strong>
+          fue procesado correctamente.
+        </p>
+      <% } else { %>
+        <p class="alert alert-danger">
+          No se pudo completar el pago de la cuota <strong><%= installment %></strong>
+          del pr&eacute;stamo <strong>#<%= loanId %></strong>. Int&eacute;ntalo nuevamente o utiliza otro medio de pago.
+        </p>
+      <% } %>
+
+      <p class="mb-3">
+        Puedes volver a la secci&oacute;n de
+        <a href="/my-loans">Mis Pr&eacute;stamos Activos</a> para revisar el estado actualizado de tus cuotas.
+      </p>
+
+      <details class="mb-4">
+        <summary>Detalle t&eacute;cnico de la transacci&oacute;n</summary>
+        <pre style="white-space:pre-wrap; background:#f8f9fa; padding:12px; border-radius:6px; font-size:0.85rem;">
+<%= JSON.stringify(raw || {}, null, 2) %>
+        </pre>
+      </details>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>
+

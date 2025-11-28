@@ -63,6 +63,7 @@ app.use(indexRoutes)
 app.use('/api/loan-requests', require('./src/routes/loanRequests'))
 app.use('/api/applicants', require('./src/routes/applicants'))
 app.use('/api', loanStatusRouterFactory(pool));
+app.use('/api/payments', require('./src/routes/payments'));
 
 //app.use(express.static(join(__dirname, 'src', 'public')))
 app.use(express.static(path.join(__dirname, 'src', 'public')));

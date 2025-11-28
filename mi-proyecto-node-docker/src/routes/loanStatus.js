@@ -104,7 +104,48 @@ module.exports = (pool) => {
       const schedule = buildInstallmentSchedule(loan);
       const summary = summarizeSchedule(schedule);
 
-      return res.json({ loan, schedule, summary });
+      // Intentar marcar cuotas ya pagadas (si existe tabla de pagos)
+      let paidInstallments = [];
+      try {
+        const paidRes = await pool.query(
+          `SELECT installment
+             FROM loan_installment_payments
+            WHERE loan_request_id = $1
+              AND status IN ('AUTHORIZED','PAID')`,
+          [id]
+        );
+        paidInstallments = paidRes.rows.map((r) => Number(r.installment));
+      } catch (innerErr) {
+        const msg = String(innerErr.message || innerErr);
+        // Si la tabla aún no existe, seguimos sin marcar pagos
+        if (!msg.includes('relation') || !msg.includes('loan_installment_payments')) {
+          console.error('[GET /loan-requests/:id/installments] PAYMENTS_ERROR:', innerErr);
+        }
+        paidInstallments = [];
+      }
+
+      const paidSet = new Set(
+        paidInstallments.filter((n) => Number.isFinite(n) && n > 0)
+      );
+
+      const enrichedSchedule = schedule.map((row) => ({
+        ...row,
+        paid: paidSet.has(row.installment)
+      }));
+
+      const now = new Date();
+      const nextRow =
+        enrichedSchedule.find((r) => !r.paid && new Date(r.dueDate) >= now) ||
+        enrichedSchedule.find((r) => !r.paid) ||
+        null;
+
+      return res.json({
+        loan,
+        schedule: enrichedSchedule,
+        summary,
+        paidInstallments: Array.from(paidSet),
+        nextInstallment: nextRow ? nextRow.installment : null
+      });
     } catch (err) {
       console.error('[GET /loan-requests/:id/installments] DB_ERROR:', err);
       return res.status(500).json({ error: 'DB_ERROR' });
