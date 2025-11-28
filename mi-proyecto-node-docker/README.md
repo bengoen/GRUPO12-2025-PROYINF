@@ -23,8 +23,9 @@ docker compose up --build
 (para detener los contenedores)  
 docker compose down -v
 
-si no les ejecuta asegurense de estar en la carpeta correcta y que el puerto por defecto 5432 para la base de datos esté libre.  
-si trabajan desde windows deben tener instalado WSL2 y tenerlo activado en docker desktop  
+### En caso de errores
+Si no les ejecuta asegurense de estar en la carpeta correcta y que el puerto por defecto 5432 para la base de datos esté libre.  
+Si trabajan desde windows deben tener instalado WSL2 y tenerlo activado en docker desktop  
 esto se puede verificar en  
 Configuración   
 -Resources  
