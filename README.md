@@ -10,4 +10,5 @@
 https://aula.usm.cl/mod/resource/view.php?id=6926137
 
 ## Enlace a la Wiki de trabajo
+Toda la documentación del proyecto y los avances entre hitos se encuentran acá:
 https://github.com/bengoen/GRUPO12-2025-PROYINF/wiki
