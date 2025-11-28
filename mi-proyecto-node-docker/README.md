@@ -15,13 +15,13 @@ A continuación, se enlistan las dependencias necesarias, la instalación y algu
 (debe tener docker-desktop abierto en todo momento)
 Ejecutar en terminal:
 
-1. Deben navegar hasta la carpeta GRUPO12-2025-PROYINF/mi-proyecto-node-docker  
+1. Deben navegar hasta la carpeta `GRUPO12-2025-PROYINF/mi-proyecto-node-docker`  
 
 2. (les instalará las dependencias se suele demorar un poco la primera vez con esto levantan el proyecto)  
-docker compose up --build
+`docker compose up --build`
 
 (para detener los contenedores)  
-docker compose down -v
+`docker compose down -v`
 
 ### En caso de errores
 Si no les ejecuta asegurense de estar en la carpeta correcta y que el puerto por defecto 5432 para la base de datos esté libre.  
@@ -34,16 +34,16 @@ Configuración
 
 ## Comandos útiles 
 Pueden levantar el proyecto sin volver a construir las imágenes con el siguiente comando:
-  - docker compose up
+  - `docker compose up`
 Si quieren levantar el proyecto en segundo plano pueden usar:
-  - docker compose up -d
+  - `docker compose up -d`
 Para ver el estado de los servicios que están corriendo:
-  - docker compose ps
+  - `docker compose ps`
 Para ver los logs en tiempo real de todos los servicios:
-  - docker compose logs -f
+  - `docker compose logs -f`
 O de un servicio específico:
-  - docker compose logs -f nombre_servicio
+  - `docker compose logs -f nombre_servicio`
 Para reiniciar un servicio específico:
-  - docker compose restart nombre_servicio
+  - `docker compose restart nombre_servicio`
 Para detener todos los contenedores sin eliminar volúmenes:
-  - docker compose down
+  - `docker compose down`
