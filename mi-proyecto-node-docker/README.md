@@ -10,7 +10,7 @@ A continuación, se enlistan las dependencias necesarias, la instalación y algu
 
 ## Instalación
 
-### 1. Clonar el repositorio
+### Clonar el repositorio
 `git clone https://github.com/bengoen/GRUPO12-2025-PROYINF`
 (debe tener docker-desktop abierto en todo momento)
 Ejecutar en terminal:
@@ -32,7 +32,6 @@ Configuración
   -Enable integration with additional distros:(esto debe estar activo)  
 
 ## Comandos útiles 
-
 Pueden levantar el proyecto sin volver a construir las imágenes con el siguiente comando:
   - docker compose up
 Si quieren levantar el proyecto en segundo plano pueden usar:
