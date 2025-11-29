@@ -14,4 +14,4 @@ Toda la documentación del proyecto y los avances entre hitos se encuentran acá
 https://github.com/bengoen/GRUPO12-2025-PROYINF/wiki
 
 ## Enlace a al vídeo mostrando el resultado final
-https://youtu.be/6m2Hu3v8xDA
+https://www.youtube.com/watch?v=6m2Hu3v8xDA
