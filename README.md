@@ -8,13 +8,13 @@
 
 ## Enlace a la Wiki de trabajo
 Toda la documentación del proyecto y los avances entre hitos se encuentran acá:
-https://github.com/bengoen/GRUPO12-2025-PROYINF/wiki
+https://github.com/bengoen/GRUPO17-2026-INGSOFT/wiki
 
 ## Enlace a vídeo mostrando el producto (a fecha 28/11/2025)
 https://www.youtube.com/watch?v=6m2Hu3v8xDA
 
 ## Identificación del proyecto base
-El equipo continuará trabajando sobre el proyecto base desarrollado en el semestre anterior (2025-2) en el repositorio `GRUPO12-2025-PROYINF`. Recordar que la documentación del proyecto está presente en la [Wiki de trabajo](https://github.com/bengoen/GRUPO12-2025-PROYINF/wiki).
+El equipo continuará trabajando sobre el proyecto base desarrollado en el semestre anterior (2025-2) en el repositorio `GRUPO12-2025-PROYINF`. Recordar que la documentación del proyecto está presente en la [Wiki de trabajo](https://github.com/bengoen/GRUPO17-2026-INGSOFT/wiki).
 
 El sistema heredado corresponde a **Tu Préstamo Digital**, una aplicación web para la gestión de préstamos personales digitales, construida principalmente con `Node.js`, `Express`, `EJS`, `PostgreSQL` y `Docker`, contenida en la carpeta `mi-proyecto-node-docker`.
 
