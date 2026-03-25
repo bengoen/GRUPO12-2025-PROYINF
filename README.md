@@ -4,7 +4,7 @@
 - Lucas Ansieta M. - 202373504-3  
 - Bastián Garcés C. - 202373510-8  
 - Benjamín Palacios T. - 202373532-9  
-- Pascual Oteiza. - 202373608-2
+- Pascual Oteiza. - 202230554-1
 
 ## Enlace al vídeo con la presentación del cliente
 https://aula.usm.cl/mod/resource/view.php?id=6926137
