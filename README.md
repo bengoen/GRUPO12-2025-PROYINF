@@ -1,7 +1,8 @@
 # Ingeniería de Software - Primer semestre de 2026 - Grupo 17
 
 ## Integrantes (actualizados a Marzo de 2026)
-- Lucas Ansieta M. - 202373504-3  
+- Lucas Ansieta M. - 202373504-3
+- Miguel Boutaud L. - 202373620-1
 - Bastián Garcés C. - 202373510-8  
 - Benjamín Palacios T. - 202373532-9  
 - Pascual Oteiza. - 202230554-1
