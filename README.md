@@ -5,7 +5,7 @@
 - Miguel Boutaud L. - 202373620-1
 - Bastián Garcés C. - 202373510-8  
 - Benjamín Palacios T. - 202373532-9  
-- Pascual Oteiza. - 202230554-1
+- Pascual Oteíza G. - 202230554-1
 
 ## Nombre del ayudante asignado
 Miguel Huerta F.
