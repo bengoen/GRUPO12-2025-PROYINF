@@ -9,6 +9,18 @@ services:
       - DB_USER=user
       - DB_PASSWORD=password
       - DB_NAME=mydb
+      # URL pública de la app (para links en correos)
+      - APP_URL=http://localhost:3000
+      # Gmail SMTP — usa una Contraseña de Aplicación (no tu contraseña normal)
+      # Actívala en: Google → Seguridad → Verificación en 2 pasos → Contraseñas de aplicación
+      - GMAIL_USER=AGREGA_TU_CORREO_AQUI
+      - GMAIL_PASS=AGREGA_TU_PASSWORD_AQUI
+      # Twilio — WhatsApp Sandbox + SMS (cuenta gratuita en twilio.com)
+      # WhatsApp Sandbox: https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn
+      - TWILIO_ACCOUNT_SID=AGREGA_TU_SID_AQUI
+      - TWILIO_AUTH_TOKEN=AGREGA_TU_TOKEN_AQUI
+      - TWILIO_WHATSAPP_FROM=+14155238886
+      - TWILIO_SMS_FROM=+12183576951
     depends_on:
       - postgres_db
     volumes:

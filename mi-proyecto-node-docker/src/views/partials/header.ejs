@@ -12,8 +12,39 @@
                 <li><a href="/login">Mi Cuenta</a></li>
                 <li><a href="/requests">Mis Solicitudes</a></li>
                 <li><a href="/my-loans">Mis Pr&eacute;stamos Activos</a></li>
+                <li>
+                  <a href="/notifications" id="nav-notif-link" style="position:relative; display:inline-block;" aria-label="Notificaciones">
+                    <i class="fas fa-bell"></i>
+                    <span id="nav-notif-badge" style="display:none; position:absolute; top:-6px; right:-10px; background:#dc3545; color:#fff; border-radius:50%; font-size:0.65rem; min-width:16px; height:16px; line-height:16px; text-align:center; padding:0 3px;"></span>
+                  </a>
+                </li>
             </ul>
         </nav>
+        <script>
+          (function () {
+            function updateBadge() {
+              try {
+                var aid = localStorage.getItem('applicantId');
+                if (!aid) return;
+                fetch('/api/notifications?applicantId=' + aid)
+                  .then(function (r) { return r.ok ? r.json() : null; })
+                  .then(function (data) {
+                    if (!data) return;
+                    var badge = document.getElementById('nav-notif-badge');
+                    if (!badge) return;
+                    if (data.unreadCount > 0) {
+                      badge.textContent = data.unreadCount;
+                      badge.style.display = 'inline-block';
+                    } else {
+                      badge.style.display = 'none';
+                    }
+                  })
+                  .catch(function () {});
+              } catch (_) {}
+            }
+            document.addEventListener('DOMContentLoaded', updateBadge);
+          })();
+        </script>
         <button class="menu-toggle" aria-label="Toggle navigation">
             <span></span>
             <span></span>

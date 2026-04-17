@@ -8,10 +8,12 @@ const pool = require('./db'); // Importar la conexi��n
 const indexRoutes = require('./src/routes/index');
 const loanStatusRouterFactory = require('./src/routes/loanStatus');
 const startNotificationWorker = require('./src/workers/notificationWorker');
+const startCobranzaWorker = require('./src/workers/cobranzaWorker');
 const { buildInstallmentSchedule, summarizeSchedule } = require('./src/utils/installments');
 
 const app = express()
 const stopWorker = startNotificationWorker(pool);
+const stopCobranzaWorker = startCobranzaWorker(pool);
 
 // Parse JSON and form bodies for API and web forms
 app.use(express.json())
@@ -64,6 +66,7 @@ app.use('/api/loan-requests', require('./src/routes/loanRequests'))
 app.use('/api/applicants', require('./src/routes/applicants'))
 app.use('/api', loanStatusRouterFactory(pool));
 app.use('/api/payments', require('./src/routes/payments'));
+app.use('/api/notifications', require('./src/routes/notifications'));
 
 //app.use(express.static(join(__dirname, 'src', 'public')))
 app.use(express.static(path.join(__dirname, 'src', 'public')));
@@ -72,8 +75,8 @@ app.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
 
-process.on('SIGTERM', stopWorker);
-process.on('SIGINT', stopWorker);
+process.on('SIGTERM', () => { stopWorker(); stopCobranzaWorker(); });
+process.on('SIGINT', () => { stopWorker(); stopCobranzaWorker(); });
 
 // vistas HU002 / HU003
 app.get('/requests', (req, res) => res.render('requests'));
@@ -131,3 +134,5 @@ app.get('/requests/:id/contract', async (req, res) => {
 app.get('/my-loans', (req, res) =>
   res.render('my_loans', { title: 'Mis pr��stamos activos' })
 );
+
+app.get('/notifications', (_req, res) => res.render('notifications'));

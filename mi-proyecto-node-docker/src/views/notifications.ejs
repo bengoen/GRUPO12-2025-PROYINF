@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mis Notificaciones</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="loans-page">
+    <div class="container">
+      <h1 class="mb-3">Mis Notificaciones</h1>
+      <p class="muted mb-3">
+        Avisos sobre tus cuotas pr&oacute;ximas a vencer, cuotas vencidas y cambios en tus solicitudes.
+      </p>
+
+      <div id="notif-banner" class="alert alert-info d-flex justify-content-between align-items-center mb-3" style="display:none !important;">
+        <span id="notif-unread-label"></span>
+        <button class="btn btn-sm btn-outline-primary" onclick="markAllRead()">Marcar todas como le&iacute;das</button>
+      </div>
+
+      <div id="notif-list">
+        <p class="muted">Cargando notificaciones...</p>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    (function () {
+      let currentApplicantId = null;
+
+      function getApplicantId() {
+        try {
+          const raw = localStorage.getItem('applicantId');
+          const n = raw ? Number(raw) : NaN;
+          if (Number.isFinite(n) && n > 0) return n;
+        } catch (_) {}
+        return null;
+      }
+
+      function formatCLP(num) {
+        try {
+          return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(Number(num || 0));
+        } catch {
+          return Math.round(Number(num || 0)).toLocaleString('es-CL') + ' CLP';
+        }
+      }
+
+      function formatDate(iso) {
+        if (!iso) return '?';
+        return new Date(iso).toLocaleDateString('es-CL');
+      }
+
+      function buildMessage(n) {
+        const p = n.payload || {};
+        switch (n.template) {
+          case 'installment_due_soon':
+            return `Su cuota #${p.installment} vence el ${formatDate(p.dueDate)} &mdash; ${formatCLP(p.totalPayment)}`;
+          case 'installment_due_today':
+            return `&#9888; Su cuota #${p.installment} vence <strong>HOY</strong> &mdash; ${formatCLP(p.totalPayment)}`;
+          case 'installment_overdue': {
+            const days = Math.abs(p.daysUntilDue || 0);
+            return `&#128308; Cuota #${p.installment} vencida hace ${days} d&iacute;a(s) &mdash; ${formatCLP(p.totalPayment)}`;
+          }
+          case 'status_changed':
+            return `El estado de su solicitud #${n.loan_request_id} fue actualizado a: <strong>${p.newStatus || ''}</strong>`;
+          default:
+            return `Notificaci&oacute;n sobre su pr&eacute;stamo #${n.loan_request_id}`;
+        }
+      }
+
+      function badgeClass(template) {
+        if (template === 'installment_overdue') return 'border-danger';
+        if (template === 'installment_due_today') return 'border-warning';
+        return 'border-primary';
+      }
+
+      function loanIdFromNotif(n) {
+        return (n.payload && n.payload.loanId) || n.loan_request_id;
+      }
+
+      function renderList(notifications) {
+        const listEl = document.getElementById('notif-list');
+        const banner = document.getElementById('notif-banner');
+        const label = document.getElementById('notif-unread-label');
+
+        if (!notifications.length) {
+          listEl.innerHTML = '<p class="muted">(No tienes notificaciones.)</p>';
+          return;
+        }
+
+        const unread = notifications.filter(n => !n.read_at).length;
+        if (unread > 0) {
+          label.textContent = `Tienes ${unread} notificaci\u00f3n(es) sin leer`;
+          banner.style.display = 'flex';
+        } else {
+          banner.style.display = 'none';
+        }
+
+        listEl.innerHTML = notifications.map(n => {
+          const unreadClass = !n.read_at ? `border-start border-3 ${badgeClass(n.template)}` : '';
+          const readBtnHtml = !n.read_at
+            ? `<button class="btn btn-sm btn-outline-secondary ms-2" onclick="markRead(${n.id}, this)">Marcar como le&iacute;da</button>`
+            : `<span class="text-muted small ms-2">Le&iacute;da</span>`;
+          const payBtn = (n.template === 'installment_due_soon' || n.template === 'installment_due_today' || n.template === 'installment_overdue')
+            ? `<a href="/my-loans" class="btn btn-sm btn-primary ms-2">Pagar ahora</a>`
+            : '';
+          const ts = n.created_at ? new Date(n.created_at).toLocaleString('es-CL') : '';
+          return `
+            <div class="card mb-3 ps-3 ${unreadClass}" id="notif-card-${n.id}">
+              <div class="card-body d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                  <p class="mb-1">${buildMessage(n)}</p>
+                  <small class="text-muted">${ts}</small>
+                </div>
+                <div class="d-flex align-items-center">
+                  ${payBtn}
+                  ${readBtnHtml}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      async function loadNotifications() {
+        currentApplicantId = getApplicantId();
+        const listEl = document.getElementById('notif-list');
+
+        if (!currentApplicantId) {
+          listEl.innerHTML = '<p>Debes iniciar sesi&oacute;n para ver tus notificaciones. Ve a <a href="/login">Mi Cuenta</a>.</p>';
+          return;
+        }
+
+        try {
+          const res = await fetch(`/api/notifications?applicantId=${currentApplicantId}`);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          renderList(data.notifications || []);
+        } catch (err) {
+          console.error(err);
+          listEl.innerHTML = '<p style="color:#b00020;">No se pudieron cargar las notificaciones.</p>';
+        }
+      }
+
+      window.markRead = async function (id, btn) {
+        if (!currentApplicantId) return;
+        try {
+          if (btn) btn.disabled = true;
+          await fetch(`/api/notifications/${id}/read`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ applicantId: currentApplicantId })
+          });
+          await loadNotifications();
+        } catch (err) {
+          console.error(err);
+          if (btn) btn.disabled = false;
+        }
+      };
+
+      window.markAllRead = async function () {
+        if (!currentApplicantId) return;
+        try {
+          await fetch(`/api/notifications/read-all`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ applicantId: currentApplicantId })
+          });
+          await loadNotifications();
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', loadNotifications);
+    })();
+  </script>
+</body>
+</html>
