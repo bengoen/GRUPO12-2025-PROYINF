@@ -7,6 +7,9 @@
 - Benjamín Palacios T. - 202373532-9  
 - Pascual Oteiza. - 202230554-1
 
+## Nombre del ayudante asignado
+Miguel Huerta F.
+
 ## Enlace a la Wiki de trabajo
 Toda la documentación del proyecto y los avances entre hitos se encuentran acá:
 https://github.com/bengoen/GRUPO17-2026-INGSOFT/wiki
